@@ -1,7 +1,9 @@
 package com.promtior.booking.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -90,5 +92,44 @@ class BookingTest {
   void rechazaRangoNulo() {
     assertThrows(
         NullPointerException.class, () -> new Booking("Retro de equipo", 3, OWNER, Room.C, null));
+  }
+
+  private static BookingRange rangeFrom(
+      int startHour, int startMinute, int endHour, int endMinute) {
+    return BookingRange.between(
+        new TimeSlot(LocalDateTime.of(2026, 8, 27, startHour, startMinute)),
+        new TimeSlot(LocalDateTime.of(2026, 8, 27, endHour, endMinute)));
+  }
+
+  /**
+   * RN-07, ejemplo textual del enunciado: una cita de 10:00 a 11:30 bloquea todo inicio anterior a
+   * 11:30 en la misma sala, y permite uno que empiece exactamente a las 11:30.
+   */
+  @Test
+  void unaReservaDeDiezAOnceYMediaRechazaCualquierInicioAnteriorAOnceYMediaEnLaMismaSala() {
+    Booking existente = new Booking("Retro de equipo", 3, OWNER, Room.C, rangeFrom(10, 0, 11, 0));
+
+    Booking empiezaAntesDeQueTermine =
+        new Booking("Otra reunión", 3, OWNER, Room.C, rangeFrom(11, 0, 11, 30));
+    Booking empiezaExactamenteCuandoTermina =
+        new Booking("Otra reunión", 3, OWNER, Room.C, rangeFrom(11, 30, 12, 0));
+
+    assertTrue(existente.overlapsWith(empiezaAntesDeQueTermine));
+    assertFalse(existente.overlapsWith(empiezaExactamenteCuandoTermina));
+  }
+
+  @Test
+  void reservasEnSalasDistintasNuncaSeSolapanAunqueElHorarioCoincida() {
+    Booking enSalaC = new Booking("Retro de equipo", 3, OWNER, Room.C, rangeFrom(10, 0, 11, 0));
+    Booking enSalaDMismoHorario =
+        new Booking("Otra reunión", 3, OWNER, Room.D, rangeFrom(10, 0, 11, 0));
+
+    assertFalse(enSalaC.overlapsWith(enSalaDMismoHorario));
+  }
+
+  @Test
+  void overlapsWithRechazaOtraReservaNula() {
+    Booking booking = new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE);
+    assertThrows(NullPointerException.class, () -> booking.overlapsWith(null));
   }
 }

@@ -60,4 +60,14 @@ public record BookingRange(List<TimeSlot> slots) {
   public int slotCount() {
     return slots.size();
   }
+
+  /**
+   * RN-07: dos rangos se solapan si comparten algún instante. Bordes que se tocan (uno termina
+   * cuando el otro empieza) no cuentan como solapamiento.
+   */
+  public boolean overlaps(BookingRange other) {
+    Objects.requireNonNull(other, "other");
+    return start().start().isBefore(other.end().end())
+        && other.start().start().isBefore(end().end());
+  }
 }

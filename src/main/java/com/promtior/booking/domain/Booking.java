@@ -26,4 +26,10 @@ public record Booking(String title, int attendeeCount, User owner, Room room, Bo
               .formatted(room, room.capacity(), attendeeCount));
     }
   }
+
+  /** RN-07: dos reservas en la misma sala no pueden solaparse. */
+  public boolean overlapsWith(Booking other) {
+    Objects.requireNonNull(other, "other");
+    return room == other.room && range.overlaps(other.range);
+  }
 }

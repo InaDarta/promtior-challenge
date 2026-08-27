@@ -1,7 +1,9 @@
 package com.promtior.booking.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,5 +86,41 @@ class BookingRangeTest {
   void betweenRechazaTresHorasYMedia() {
     assertThrows(
         IllegalArgumentException.class, () -> BookingRange.between(slotAt(9, 0), slotAt(12, 0)));
+  }
+
+  @Test
+  void rangosQueSeCruzanSeSolapan() {
+    BookingRange diezAOnceYMedia = BookingRange.between(slotAt(10, 0), slotAt(11, 0));
+    BookingRange diezYMediaAOnce = BookingRange.between(slotAt(10, 30), slotAt(11, 30));
+    assertTrue(diezAOnceYMedia.overlaps(diezYMediaAOnce));
+    assertTrue(diezYMediaAOnce.overlaps(diezAOnceYMedia));
+  }
+
+  @Test
+  void unRangoContenidoEnOtroSeSolapan() {
+    BookingRange nueveAOnce = BookingRange.between(slotAt(9, 0), slotAt(10, 30));
+    BookingRange diezADiezYMedia = BookingRange.between(slotAt(10, 0), slotAt(10, 0));
+    assertTrue(nueveAOnce.overlaps(diezADiezYMedia));
+  }
+
+  @Test
+  void rangosQueSoloSeTocanEnElBordeNoSeSolapan() {
+    BookingRange diezAOnceYMedia = BookingRange.between(slotAt(10, 0), slotAt(11, 0));
+    BookingRange onceYMediaADoce = BookingRange.between(slotAt(11, 30), slotAt(12, 0));
+    assertFalse(diezAOnceYMedia.overlaps(onceYMediaADoce));
+    assertFalse(onceYMediaADoce.overlaps(diezAOnceYMedia));
+  }
+
+  @Test
+  void rangosDisjuntosNoSeSolapan() {
+    BookingRange diezAOnce = BookingRange.between(slotAt(10, 0), slotAt(10, 30));
+    BookingRange doceATrece = BookingRange.between(slotAt(12, 0), slotAt(12, 30));
+    assertFalse(diezAOnce.overlaps(doceATrece));
+  }
+
+  @Test
+  void overlapsRechazaOtroNulo() {
+    BookingRange diezAOnce = BookingRange.between(slotAt(10, 0), slotAt(10, 30));
+    assertThrows(NullPointerException.class, () -> diezAOnce.overlaps(null));
   }
 }
