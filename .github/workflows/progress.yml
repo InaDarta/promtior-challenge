@@ -1,0 +1,48 @@
+name: Progreso
+
+# Regenera doc/PROGRESO.md cuando cambia el estado de los issues.
+#
+# Nota sobre el disparador: para los eventos `issues`, GitHub siempre ejecuta la
+# versión del workflow que está en la rama por defecto (main), no la de develop.
+# Por eso el job hace checkout explícito de develop, que es donde vive doc/.
+on:
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled, milestoned, demilestoned, deleted]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 11 * * *'   # red de seguridad diaria, 08:00 en Montevideo
+
+concurrency:
+  group: progreso
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Regenerar el tablero
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: ./scripts/progress.sh
+
+      - name: Commitear si cambió
+        run: |
+          if git diff --quiet -- doc/PROGRESO.md; then
+            echo "sin cambios"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add doc/PROGRESO.md
+          git commit -m "chore: refresh progress dashboard [skip ci]"
+          git push origin develop
