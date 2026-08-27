@@ -23,7 +23,8 @@ Ver el Javadoc de cada `package-info.java` para el detalle.
 
 - `main` siempre desplegable. `develop` es la rama de integración.
 - Una rama y un PR por sub-issue. **Todo PR va contra `develop`, nunca contra `main`.**
-- Rama: `feature/E0X.N-slug`, o `chore/`/`docs/` según corresponda.
+- Rama: `feature/E0X.N-slug`, o `chore/`/`docs/` según corresponda. **Se crea siempre desde
+  `develop`** (no desde `main`), salvo que se indique explícitamente lo contrario.
 - PR: squash merge contra `develop`, con `Closes #N`.
 - Plan completo y convenciones de título/labels/milestone en
   [doc/epics/README.md](doc/epics/README.md). Progreso en [doc/PROGRESO.md](doc/PROGRESO.md).
