@@ -23,8 +23,12 @@ Se probó de punta a punta en [`notebooks/spike-jupyter-kernel.ipynb`](../../not
   que respondió correctamente.
 
 De paso, la llamada de prueba encontró que `gemini-2.5-flash` (el modelo fijado en
-[ADR 0001](0001-stack.md)) ya no está disponible para usuarios nuevos; la API redirige a
-`gemini-3.6-flash`. Eso se corrige aparte, no es parte de esta decisión.
+[E05](../epics/E05.md)) ya no está disponible para usuarios nuevos; la API redirige a
+`gemini-3.6-flash`. Ese modelo, a su vez, ya fue superado por `gemini-3.7-flash` (GA desde el
+2026-08-13) para cuando se corrigió esta referencia — el catálogo de Gemini cambia rápido, así
+que el modelo vigente se verificó al momento de la corrección en vez de asumir el primer
+reemplazo que sugirió el 404. Ese modelo, el que finalmente queda fijado en E05 y en el notebook,
+se corrige aparte, no es parte de esta decisión.
 
 ## Alternativas descartadas
 - **Notebook en Python contra la API desplegada** — era el plan B si el kernel Java fallaba contra
