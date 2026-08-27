@@ -1,0 +1,10 @@
+{
+  "blank_issues_enabled": false,
+  "contact_links": [
+    {
+      "name": "Plan y convenciones",
+      "url": "https://github.com/InaDarta/promtior-challenge/blob/develop/doc/epics/README.md",
+      "about": "Desglose completo en épicas y sub-issues, y convenciones de título/labels/rama"
+    }
+  ]
+}
