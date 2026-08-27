@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 
 class BookingTest {
@@ -131,5 +133,31 @@ class BookingTest {
   void overlapsWithRechazaOtraReservaNula() {
     Booking booking = new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE);
     assertThrows(NullPointerException.class, () -> booking.overlapsWith(null));
+  }
+
+  private static Clock fixedClockAt(LocalDateTime dateTime) {
+    return Clock.fixed(dateTime.toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
+  }
+
+  @Test
+  void createAceptaUnInicioFuturoSegunElReloj() {
+    Clock clock = fixedClockAt(LocalDateTime.of(2026, 8, 27, 9, 0));
+    Booking booking = Booking.create("Retro de equipo", 3, OWNER, Room.C, RANGE, clock);
+    assertEquals("Retro de equipo", booking.title());
+  }
+
+  @Test
+  void createRechazaUnInicioQueYaPaso() {
+    Clock clock = fixedClockAt(LocalDateTime.of(2026, 8, 27, 10, 30));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> Booking.create("Retro de equipo", 3, OWNER, Room.C, RANGE, clock));
+  }
+
+  @Test
+  void createRechazaUnRelojNulo() {
+    assertThrows(
+        NullPointerException.class,
+        () -> Booking.create("Retro de equipo", 3, OWNER, Room.C, RANGE, null));
   }
 }

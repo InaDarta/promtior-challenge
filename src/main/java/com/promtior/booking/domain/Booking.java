@@ -1,5 +1,7 @@
 package com.promtior.booking.domain;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /** Reserva de una sala: título, cantidad de asistentes, propietario, sala y rango horario. */
@@ -31,5 +33,22 @@ public record Booking(String title, int attendeeCount, User owner, Room room, Bo
   public boolean overlapsWith(Booking other) {
     Objects.requireNonNull(other, "other");
     return room == other.room && range.overlaps(other.range);
+  }
+
+  /**
+   * Crea una reserva rechazando además un inicio que ya haya pasado según {@code clock}, el reloj
+   * inyectado para poder testear con una fecha y hora fijas.
+   */
+  public static Booking create(
+      String title, int attendeeCount, User owner, Room room, BookingRange range, Clock clock) {
+    Objects.requireNonNull(range, "range");
+    Objects.requireNonNull(clock, "clock");
+    LocalDateTime now = LocalDateTime.now(clock);
+    if (range.start().start().isBefore(now)) {
+      throw new IllegalArgumentException(
+          "no se puede reservar un horario que ya pasó: %s es anterior a %s"
+              .formatted(range.start().start(), now));
+    }
+    return new Booking(title, attendeeCount, owner, room, range);
   }
 }
