@@ -1,6 +1,8 @@
 -- Catálogo de salas: id de una letra (A-E) y capacidad máxima de asistentes.
+-- VARCHAR y no CHAR: Hibernate mapea java.lang.String a varchar, y ddl-auto=validate
+-- compara tipos exactos contra lo que Flyway ya creó.
 CREATE TABLE room (
-    id CHAR(1) PRIMARY KEY,
+    id VARCHAR(1) PRIMARY KEY,
     capacity INTEGER NOT NULL CHECK (capacity > 0)
 );
 
@@ -16,7 +18,7 @@ CREATE TABLE booking (
     title VARCHAR(120) NOT NULL,
     attendee_count INTEGER NOT NULL CHECK (attendee_count > 0),
     owner_username VARCHAR(50) NOT NULL REFERENCES app_user (username),
-    room_id CHAR(1) NOT NULL REFERENCES room (id),
+    room_id VARCHAR(1) NOT NULL REFERENCES room (id),
     range_start TIMESTAMP NOT NULL,
     range_end TIMESTAMP NOT NULL,
     CHECK (range_end > range_start)
