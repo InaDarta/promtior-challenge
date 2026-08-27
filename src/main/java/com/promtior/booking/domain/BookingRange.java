@@ -7,12 +7,20 @@ import java.util.Objects;
 /** Rango de {@link TimeSlot} contiguos, sin huecos, que compone la reserva de una sala. */
 public record BookingRange(List<TimeSlot> slots) {
 
+  /** RN-05: una reserva dura entre 1 y 6 slots, es decir entre 30 minutos y 3 horas. */
+  static final int MAX_SLOT_COUNT = 6;
+
   public BookingRange {
     Objects.requireNonNull(slots, "slots");
     if (slots.isEmpty()) {
       throw new IllegalArgumentException("BookingRange requiere al menos un slot");
     }
     slots = List.copyOf(slots);
+    if (slots.size() > MAX_SLOT_COUNT) {
+      throw new IllegalArgumentException(
+          "BookingRange no puede superar los %d slots (3 horas), pero tiene %d"
+              .formatted(MAX_SLOT_COUNT, slots.size()));
+    }
     for (int i = 1; i < slots.size(); i++) {
       TimeSlot previous = slots.get(i - 1);
       TimeSlot current = slots.get(i);

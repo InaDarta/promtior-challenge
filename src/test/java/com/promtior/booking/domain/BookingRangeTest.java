@@ -55,4 +55,34 @@ class BookingRangeTest {
     assertThrows(
         IllegalArgumentException.class, () -> BookingRange.between(slotAt(11, 0), slotAt(10, 0)));
   }
+
+  @Test
+  void aceptaExactamenteSeisSlots() {
+    BookingRange range = BookingRange.between(slotAt(9, 0), slotAt(11, 30));
+    assertEquals(6, range.slotCount());
+  }
+
+  @Test
+  void rechazaMasDeSeisSlotsConErrorQueNombraElLimite() {
+    List<TimeSlot> sieteSlots =
+        List.of(
+            slotAt(9, 0),
+            slotAt(9, 30),
+            slotAt(10, 0),
+            slotAt(10, 30),
+            slotAt(11, 0),
+            slotAt(11, 30),
+            slotAt(12, 0));
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> new BookingRange(sieteSlots));
+    assertEquals(
+        "BookingRange no puede superar los 6 slots (3 horas), pero tiene 7",
+        exception.getMessage());
+  }
+
+  @Test
+  void betweenRechazaTresHorasYMedia() {
+    assertThrows(
+        IllegalArgumentException.class, () -> BookingRange.between(slotAt(9, 0), slotAt(12, 0)));
+  }
 }
