@@ -12,3 +12,4 @@ correlativo.
 - [0001](0001-stack.md) — Stack: Java 25, Spring Boot y LangChain4j
 - [0002](0002-notebook-java-o-python.md) — Notebook del demo: Java con rapaio-jupyter-kernel
 - [0003](0003-horario-de-oficina-y-clock.md) — Horario de oficina, rechazo de reservas pasadas y `Clock` inyectable
+- [0004](0004-persistencia-de-booking.md) — Persistencia de `Booking`: sin id de dominio, columnas planas para las FK
