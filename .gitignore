@@ -34,3 +34,6 @@ target/
 .classpath
 .project
 .settings/
+
+# Jupyter
+.ipynb_checkpoints/
