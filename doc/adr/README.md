@@ -10,3 +10,4 @@ correlativo.
 
 ## Índice
 - [0001](0001-stack.md) — Stack: Java 25, Spring Boot y LangChain4j
+- [0002](0002-notebook-java-o-python.md) — Notebook del demo: Java con rapaio-jupyter-kernel
