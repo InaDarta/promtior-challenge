@@ -123,4 +123,38 @@ class BookingRangeTest {
     BookingRange diezAOnce = BookingRange.between(slotAt(10, 0), slotAt(10, 30));
     assertThrows(NullPointerException.class, () -> diezAOnce.overlaps(null));
   }
+
+  @Test
+  void aceptaElPrimerSlotDelHorarioDeOficina() {
+    BookingRange range = new BookingRange(List.of(slotAt(8, 0)));
+    assertEquals(slotAt(8, 0), range.start());
+  }
+
+  @Test
+  void aceptaElUltimoSlotDelHorarioDeOficina() {
+    BookingRange range = new BookingRange(List.of(slotAt(19, 30)));
+    assertEquals(slotAt(19, 30), range.end());
+  }
+
+  @Test
+  void rechazaUnInicioAnteriorAlHorarioDeOficina() {
+    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(slotAt(7, 30))));
+  }
+
+  @Test
+  void rechazaUnFinPosteriorAlHorarioDeOficina() {
+    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(slotAt(20, 0))));
+  }
+
+  @Test
+  void rechazaUnSabado() {
+    TimeSlot sabado = new TimeSlot(LocalDateTime.of(2026, 8, 29, 10, 0));
+    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(sabado)));
+  }
+
+  @Test
+  void rechazaUnDomingo() {
+    TimeSlot domingo = new TimeSlot(LocalDateTime.of(2026, 8, 30, 10, 0));
+    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(domingo)));
+  }
 }

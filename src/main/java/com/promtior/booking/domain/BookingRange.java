@@ -1,5 +1,9 @@
 package com.promtior.booking.domain;
 
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,6 +13,14 @@ public record BookingRange(List<TimeSlot> slots) {
 
   /** RN-05: una reserva dura entre 1 y 6 slots, es decir entre 30 minutos y 3 horas. */
   static final int MAX_SLOT_COUNT = 6;
+
+  /** Zona horaria en la que se interpretan los horarios de oficina y del reloj del dominio. */
+  public static final ZoneId OFFICE_ZONE = ZoneId.of("America/Montevideo");
+
+  private static final DayOfWeek FIRST_OFFICE_DAY = DayOfWeek.MONDAY;
+  private static final DayOfWeek LAST_OFFICE_DAY = DayOfWeek.FRIDAY;
+  private static final LocalTime OFFICE_OPENING = LocalTime.of(8, 0);
+  private static final LocalTime OFFICE_CLOSING = LocalTime.of(20, 0);
 
   public BookingRange {
     Objects.requireNonNull(slots, "slots");
@@ -29,6 +41,20 @@ public record BookingRange(List<TimeSlot> slots) {
             "BookingRange requiere slots contiguos: hueco entre %s y %s"
                 .formatted(previous.start(), current.start()));
       }
+    }
+    LocalDateTime start = slots.get(0).start();
+    LocalDateTime end = slots.get(slots.size() - 1).end();
+    DayOfWeek day = start.getDayOfWeek();
+    if (day.compareTo(FIRST_OFFICE_DAY) < 0 || day.compareTo(LAST_OFFICE_DAY) > 0) {
+      throw new IllegalArgumentException(
+          "BookingRange debe caer de lunes a viernes, pero %s es %s".formatted(start, day));
+    }
+    if (start.toLocalTime().isBefore(OFFICE_OPENING)
+        || !end.toLocalDate().equals(start.toLocalDate())
+        || end.toLocalTime().isAfter(OFFICE_CLOSING)) {
+      throw new IllegalArgumentException(
+          "BookingRange debe caer dentro del horario de oficina (%s a %s), pero va de %s a %s"
+              .formatted(OFFICE_OPENING, OFFICE_CLOSING, start, end));
     }
   }
 
