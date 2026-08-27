@@ -19,6 +19,7 @@ concurrency:
 permissions:
   contents: write
   issues: read
+  pull-requests: write
 
 jobs:
   actualizar:
@@ -35,14 +36,33 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: ./scripts/progress.sh
 
-      - name: Commitear si cambió
+      # develop tiene PR obligatorio (ver #13), así que no se puede pushear
+      # directo: se abre un PR y se mergea solo cuando el CI de verify pasa.
+      - name: Abrir PR con el tablero actualizado y mergearlo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           if git diff --quiet -- doc/PROGRESO.md; then
             echo "sin cambios"
             exit 0
           fi
+
+          BRANCH="bot/progress-update"
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
           git add doc/PROGRESO.md
-          git commit -m "chore: refresh progress dashboard [skip ci]"
-          git push origin develop
+          git commit -m "chore: refresh progress dashboard"
+          git push origin "$BRANCH" --force
+
+          PR_URL=$(gh pr list --head "$BRANCH" --base develop --json url --jq '.[0].url')
+          if [ -z "$PR_URL" ]; then
+            PR_URL=$(gh pr create --base develop --head "$BRANCH" \
+              --title "chore: refresh progress dashboard" \
+              --body "PR automático del workflow de progreso.")
+          fi
+
+          sleep 15
+          gh pr checks "$PR_URL" --watch --interval 15
+          gh pr merge "$PR_URL" --squash --delete-branch
