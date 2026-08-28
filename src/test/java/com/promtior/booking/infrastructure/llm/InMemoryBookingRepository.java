@@ -1,8 +1,10 @@
 package com.promtior.booking.infrastructure.llm;
 
+import com.promtior.booking.application.BookingConflictException;
 import com.promtior.booking.application.BookingRepository;
 import com.promtior.booking.application.IdentifiedBooking;
 import com.promtior.booking.domain.Booking;
+import com.promtior.booking.domain.BookingError;
 import com.promtior.booking.domain.Room;
 import com.promtior.booking.domain.User;
 import java.util.LinkedHashMap;
@@ -11,13 +13,26 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Doble de {@link BookingRepository} en memoria, para testear las tools de consulta. */
+/**
+ * Doble de {@link BookingRepository} en memoria, para testear las tools de consulta (E05.4) y de
+ * escritura (E05.5) sin Spring ni base. {@link #save} simula el constraint de exclusión de Postgres
+ * (RN-07): dos reservas de la misma sala que se solapan no coexisten.
+ */
 class InMemoryBookingRepository implements BookingRepository {
 
   private final Map<UUID, Booking> bookings = new LinkedHashMap<>();
 
   @Override
   public UUID save(Booking booking) {
+    bookings.values().stream()
+        .filter(existing -> existing.overlapsWith(booking))
+        .findFirst()
+        .ifPresent(
+            conflicting -> {
+              throw new BookingConflictException(
+                  new BookingError.SlotOccupied(
+                      booking.room(), List.of(conflicting.range().start())));
+            });
     UUID id = UUID.randomUUID();
     bookings.put(id, booking);
     return id;

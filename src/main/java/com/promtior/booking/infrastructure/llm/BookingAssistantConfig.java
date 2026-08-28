@@ -22,6 +22,12 @@ import org.springframework.context.annotation.Configuration;
  * proveedor configurado, conversar lanza {@link LlmNotConfiguredException} en vez de fallar el
  * arranque de toda la aplicación -- el resto de la API sigue funcionando igual sin credenciales de
  * LLM.
+ *
+ * <p>Las tools de consulta de E05.4 ({@link RoomQueryTools}, {@link BookingQueryTools}) y las de
+ * escritura de E05.5 ({@link BookingTools}) se inyectan como parámetro obligatorio, igual que
+ * cualquier otro bean de Spring: a diferencia del {@code ChatModel}, no hay ningún escenario en el
+ * que no existan en producción, así que un test que arma este bean directamente (sin el resto del
+ * contexto de Spring) tiene que proveerlas explícitamente.
  */
 @Configuration
 class BookingAssistantConfig {
@@ -36,12 +42,13 @@ class BookingAssistantConfig {
   BookingAssistant bookingAssistant(
       ObjectProvider<ChatModel> chatModelProvider,
       RoomQueryTools roomQueryTools,
-      BookingQueryTools bookingQueryTools) {
+      BookingQueryTools bookingQueryTools,
+      BookingTools bookingTools) {
     return AiServices.builder(BookingAssistant.class)
         .chatModel(deferredChatModel(chatModelProvider))
         .chatMemoryProvider(
             memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
-        .tools(roomQueryTools, bookingQueryTools)
+        .tools(roomQueryTools, bookingQueryTools, bookingTools)
         .build();
   }
 

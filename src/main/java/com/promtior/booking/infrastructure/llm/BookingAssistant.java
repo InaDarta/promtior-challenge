@@ -10,7 +10,8 @@ import dev.langchain4j.service.UserMessage;
  * dev.langchain4j.memory.chat.ChatMemoryProvider} que aísla el historial por {@code memoryId}.
  *
  * <p>{@link BookingAssistantConfig} le agrega las tools de consulta de E05.4 ({@link
- * RoomQueryTools}, {@link BookingQueryTools}); sin system prompt todavía, eso es E05.6.
+ * RoomQueryTools}, {@link BookingQueryTools}) y las de escritura de E05.5 ({@link BookingTools});
+ * sin system prompt todavía, eso es E05.6.
  */
 public interface BookingAssistant {
 

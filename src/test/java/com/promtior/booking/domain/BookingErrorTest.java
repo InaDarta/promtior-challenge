@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class BookingErrorTest {
@@ -123,5 +124,29 @@ class BookingErrorTest {
     for (BookingError error : errores) {
       assertEquals(false, error.message().isBlank());
     }
+  }
+
+  /**
+   * Contrato de E04.4: cada subtipo tiene un código estable y distinto, exhaustivo sin rama
+   * default, del que dependen tanto {@code BookingProblems} (REST) como {@code BookingTools}
+   * (E05.5).
+   */
+  @Test
+  void todosLosSubtiposTienenUnCodigoDistinto() {
+    List<BookingError> errores =
+        List.of(
+            new BookingError.CapacityExceeded(Room.A, 5),
+            new BookingError.SlotOccupied(Room.A, List.of(SLOT_1000)),
+            new BookingError.MaxDurationExceeded(7, 6),
+            new BookingError.NonContiguousRange(SLOT_1000, SLOT_1030),
+            new BookingError.OutsideOfficeHours(
+                LocalDateTime.of(2026, 8, 27, 21, 0), LocalDateTime.of(2026, 8, 27, 21, 30)),
+            new BookingError.MissingTitle(),
+            new BookingError.InThePast(
+                LocalDateTime.of(2026, 8, 27, 9, 0), LocalDateTime.of(2026, 8, 27, 9, 30)));
+
+    List<String> codigos = errores.stream().map(BookingError::code).toList();
+
+    assertEquals(errores.size(), Set.copyOf(codigos).size());
   }
 }

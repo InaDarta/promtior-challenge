@@ -4,18 +4,22 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.promtior.booking.application.CancelBooking;
+import com.promtior.booking.application.CreateBooking;
 import com.promtior.booking.application.GetRoomSchedule;
 import com.promtior.booking.application.ListAvailableRooms;
 import com.promtior.booking.application.ListMyBookings;
 import com.promtior.booking.domain.User;
 import dev.langchain4j.model.chat.ChatModel;
+import java.time.Clock;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /**
  * Prueba el criterio de aceptación de E05.3: dos usuarios tienen conversaciones independientes, y
  * el historial de un mismo usuario le llega al modelo en cada turno, sin dejarlo crecer sin límite.
- * Las tools (E05.4) se arman con dobles vacíos: ninguno de estos tests ejercita tool calling real.
+ * Las tools (E05.4/E05.5) se arman con dobles vacíos: ninguno de estos tests ejercita tool calling
+ * real.
  */
 class BookingAssistantConfigTest {
 
@@ -34,7 +38,21 @@ class BookingAssistantConfigTest {
                       new InMemoryBookingRepository(),
                       new FakeCurrentUserProvider(new User("nadie"))))
           .withBean(RoomQueryTools.class)
-          .withBean(BookingQueryTools.class);
+          .withBean(BookingQueryTools.class)
+          .withBean(
+              CreateBooking.class,
+              () ->
+                  new CreateBooking(
+                      new InMemoryBookingRepository(),
+                      new FakeCurrentUserProvider(new User("nadie")),
+                      Clock.systemDefaultZone()))
+          .withBean(
+              CancelBooking.class,
+              () ->
+                  new CancelBooking(
+                      new InMemoryBookingRepository(),
+                      new FakeCurrentUserProvider(new User("nadie"))))
+          .withBean(BookingTools.class);
 
   @Test
   void sinUnChatModelEnElContextoElAsistenteExisteYFallaAlConversar() {
