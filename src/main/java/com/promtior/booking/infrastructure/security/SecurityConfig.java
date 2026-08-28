@@ -17,8 +17,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Sesiones sin estado (el JWT es la sesión): {@code /api/auth/login} y los estáticos son públicos,
- * cualquier otro endpoint exige el token. Ver ADR 0006.
+ * Sesiones sin estado (el JWT es la sesión): {@code /api/auth/login}, los estáticos y la
+ * documentación de OpenAPI/Swagger UI son públicos, cualquier otro endpoint exige el token. Ver ADR
+ * 0006.
  */
 @Configuration
 @EnableWebSecurity
@@ -40,6 +41,8 @@ class SecurityConfig {
                 auth.requestMatchers(HttpMethod.POST, "/api/auth/login")
                     .permitAll()
                     .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
+                    .permitAll()
+                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
