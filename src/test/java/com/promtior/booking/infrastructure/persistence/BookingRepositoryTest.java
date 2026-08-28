@@ -36,12 +36,11 @@ class BookingRepositoryTest extends AbstractPostgresIntegrationTest {
           new TimeSlot(LocalDateTime.of(2026, 8, 31, 10, 30)));
 
   /**
-   * El seed de {@code room}/{@code app_user} es de E02.2; acá alcanza con las filas que las FK de
-   * {@code booking} exigen para poder insertar.
+   * {@code room} ya viene poblada por el seed de E02.2 (Flyway); acá solo hace falta el {@code
+   * app_user} que la FK de {@code booking} exige.
    */
   @BeforeEach
-  void seedReferenciasDeLaFk() {
-    jdbcTemplate.update("INSERT INTO room (id, capacity) VALUES ('C', 8), ('D', 12)");
+  void seedReferenciaDeLaFk() {
     jdbcTemplate.update("INSERT INTO app_user (username, password_hash) VALUES ('user1', 'x')");
   }
 
