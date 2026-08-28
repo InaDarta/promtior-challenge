@@ -10,8 +10,12 @@ import com.promtior.booking.application.GetRoomSchedule;
 import com.promtior.booking.application.ListAvailableRooms;
 import com.promtior.booking.application.ListMyBookings;
 import com.promtior.booking.domain.User;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import java.time.Clock;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
@@ -37,6 +41,11 @@ class BookingAssistantConfigTest {
                   new ListMyBookings(
                       new InMemoryBookingRepository(),
                       new FakeCurrentUserProvider(new User("nadie"))))
+          .withBean(
+              BookingSystemPrompt.class,
+              () ->
+                  new BookingSystemPrompt(
+                      Clock.systemDefaultZone(), new FakeCurrentUserProvider(new User("nadie"))))
           .withBean(RoomQueryTools.class)
           .withBean(BookingQueryTools.class)
           .withBean(
@@ -89,6 +98,32 @@ class BookingAssistantConfigTest {
 
               assertTrue(reply.contains("sala A"));
               assertTrue(reply.contains("cancelala"));
+            });
+  }
+
+  @Test
+  void cadaTurnoLlevaElSystemPromptConElUsuarioLogueadoYElCatalogoDeSalas() {
+    AtomicReference<String> systemMessageRecibido = new AtomicReference<>();
+    contextRunner
+        .withBean(
+            ChatModel.class,
+            () ->
+                new StubChatModel(
+                    request -> {
+                      request.messages().stream()
+                          .filter(SystemMessage.class::isInstance)
+                          .map(m -> ((SystemMessage) m).text())
+                          .findFirst()
+                          .ifPresent(systemMessageRecibido::set);
+                      return ChatResponse.builder().aiMessage(AiMessage.from("ok")).build();
+                    }))
+        .run(
+            context -> {
+              BookingAssistant assistant = context.getBean(BookingAssistant.class);
+              assistant.chat("user1", "hola");
+
+              assertTrue(systemMessageRecibido.get().contains("nadie"));
+              assertTrue(systemMessageRecibido.get().contains("Sala A: 4 personas"));
             });
   }
 
