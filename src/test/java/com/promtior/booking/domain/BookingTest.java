@@ -32,12 +32,14 @@ class BookingTest {
 
   @Test
   void rechazaTituloVacio() {
-    assertThrows(IllegalArgumentException.class, () -> new Booking("", 3, OWNER, Room.C, RANGE));
+    BookingErrorException exception =
+        assertThrows(BookingErrorException.class, () -> new Booking("", 3, OWNER, Room.C, RANGE));
+    assertEquals(new BookingError.MissingTitle(), exception.error());
   }
 
   @Test
   void rechazaTituloSoloEspacios() {
-    assertThrows(IllegalArgumentException.class, () -> new Booking("   ", 3, OWNER, Room.C, RANGE));
+    assertThrows(BookingErrorException.class, () -> new Booking("   ", 3, OWNER, Room.C, RANGE));
   }
 
   @Test
@@ -57,19 +59,16 @@ class BookingTest {
   @Test
   void rechazaCeroAsistentes() {
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new Booking("Retro de equipo", 0, OWNER, Room.C, RANGE));
+        BookingErrorException.class, () -> new Booking("Retro de equipo", 0, OWNER, Room.C, RANGE));
   }
 
   @Test
   void rechazaAsistentesQueSuperanLaCapacidadDeLaSala() {
-    IllegalArgumentException exception =
+    BookingErrorException exception =
         assertThrows(
-            IllegalArgumentException.class,
+            BookingErrorException.class,
             () -> new Booking("Retro de equipo", 9, OWNER, Room.C, RANGE));
-    assertEquals(
-        "attendeeCount debe estar entre 1 y la capacidad de la sala C (8), pero fue 9",
-        exception.getMessage());
+    assertEquals(new BookingError.CapacityExceeded(Room.C, 9), exception.error());
   }
 
   @Test
@@ -149,9 +148,14 @@ class BookingTest {
   @Test
   void createRechazaUnInicioQueYaPaso() {
     Clock clock = fixedClockAt(LocalDateTime.of(2026, 8, 27, 10, 30));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> Booking.create("Retro de equipo", 3, OWNER, Room.C, RANGE, clock));
+    BookingErrorException exception =
+        assertThrows(
+            BookingErrorException.class,
+            () -> Booking.create("Retro de equipo", 3, OWNER, Room.C, RANGE, clock));
+    assertEquals(
+        new BookingError.InThePast(
+            LocalDateTime.of(2026, 8, 27, 10, 0), LocalDateTime.of(2026, 8, 27, 10, 30)),
+        exception.error());
   }
 
   @Test
