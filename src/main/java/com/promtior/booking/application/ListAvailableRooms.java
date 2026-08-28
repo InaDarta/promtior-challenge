@@ -6,6 +6,7 @@ import com.promtior.booking.domain.Room;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * Salas libres en un rango, filtradas por capacidad mínima si se indica.
@@ -13,6 +14,7 @@ import java.util.Objects;
  * <p>Una sala está libre si ninguno de sus slots en el rango está ocupado. Se apoya en {@link
  * Availability#of} y no reimplementa la lógica de solapamiento de RN-07.
  */
+@Service
 public class ListAvailableRooms {
 
   private final BookingRepository bookingRepository;

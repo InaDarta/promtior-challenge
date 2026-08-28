@@ -67,11 +67,9 @@ class AuthControllerTest extends AbstractPostgresIntegrationTest {
   void unEndpointDeReservasConTokenValidoNoDevuelve401() throws Exception {
     String token = login("User1", PASSWORD_DEL_ENUNCIADO);
 
-    // No hay controlador de reservas todavía (E04): un token válido pasa el filtro de
-    // autenticación y llega al dispatcher, que responde 404 en vez de 401.
     mockMvc
         .perform(get("/api/bookings").header("Authorization", "Bearer " + token))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isOk());
   }
 
   private String login(String username, String password) throws Exception {
