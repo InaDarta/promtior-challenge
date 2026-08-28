@@ -5,6 +5,7 @@ import com.promtior.booking.application.BookingRepository;
 import com.promtior.booking.domain.Booking;
 import com.promtior.booking.domain.BookingError;
 import com.promtior.booking.domain.Room;
+import com.promtior.booking.domain.User;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
@@ -59,5 +60,12 @@ class JpaBookingRepository implements BookingRepository {
   @Override
   public List<Booking> findByRoom(Room room) {
     return repository.findByRoomId(room.name()).stream().map(BookingJpaEntity::toDomain).toList();
+  }
+
+  @Override
+  public List<Booking> findByOwner(User owner) {
+    return repository.findByOwnerUsername(owner.username()).stream()
+        .map(BookingJpaEntity::toDomain)
+        .toList();
   }
 }

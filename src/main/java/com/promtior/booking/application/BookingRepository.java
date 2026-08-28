@@ -2,6 +2,7 @@ package com.promtior.booking.application;
 
 import com.promtior.booking.domain.Booking;
 import com.promtior.booking.domain.Room;
+import com.promtior.booking.domain.User;
 import java.util.List;
 
 /**
@@ -19,4 +20,7 @@ public interface BookingRepository {
 
   /** Las reservas existentes en {@code room}, insumo del cálculo de disponibilidad del dominio. */
   List<Booking> findByRoom(Room room);
+
+  /** Las reservas de {@code owner}, insumo de {@link ListMyBookings}. */
+  List<Booking> findByOwner(User owner);
 }
