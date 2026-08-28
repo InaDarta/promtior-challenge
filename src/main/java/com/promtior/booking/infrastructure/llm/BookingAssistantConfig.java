@@ -2,8 +2,10 @@ package com.promtior.booking.infrastructure.llm;
 
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
@@ -41,11 +43,13 @@ class BookingAssistantConfig {
   @Bean
   BookingAssistant bookingAssistant(
       ObjectProvider<ChatModel> chatModelProvider,
+      ObjectProvider<StreamingChatModel> streamingChatModelProvider,
       RoomQueryTools roomQueryTools,
       BookingQueryTools bookingQueryTools,
       BookingTools bookingTools) {
     return AiServices.builder(BookingAssistant.class)
         .chatModel(deferredChatModel(chatModelProvider))
+        .streamingChatModel(deferredStreamingChatModel(streamingChatModelProvider))
         .chatMemoryProvider(
             memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
         .tools(roomQueryTools, bookingQueryTools, bookingTools)
@@ -61,6 +65,28 @@ class BookingAssistantConfig {
           throw new LlmNotConfiguredException();
         }
         return chatModel.doChat(request);
+      }
+    };
+  }
+
+  /**
+   * Análogo de {@link #deferredChatModel} para el camino de streaming: sin proveedor configurado,
+   * el fallo no puede lanzarse hacia arriba -- para cuando este método corre no hay nadie síncrono
+   * escuchando esa excepción -- así que se entrega vía {@link
+   * StreamingChatResponseHandler#onError}, que es donde el framework espera ver los fallos de un
+   * {@link StreamingChatModel}.
+   */
+  private static StreamingChatModel deferredStreamingChatModel(
+      ObjectProvider<StreamingChatModel> streamingChatModelProvider) {
+    return new StreamingChatModel() {
+      @Override
+      public void doChat(ChatRequest request, StreamingChatResponseHandler handler) {
+        StreamingChatModel streamingChatModel = streamingChatModelProvider.getIfAvailable();
+        if (streamingChatModel == null) {
+          handler.onError(new LlmNotConfiguredException());
+          return;
+        }
+        streamingChatModel.doChat(request, handler);
       }
     };
   }

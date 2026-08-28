@@ -36,41 +36,43 @@ export function LoginPage() {
   }
 
   return (
-    <Panel title="Iniciar sesión">
-      <form onSubmit={handleSubmit}>
-        <ErrorBanner message={error} />
-        <TextField
-          label="Usuario"
-          id="username"
-          name="username"
-          type="text"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          autoComplete="username"
-          required
-        />
-        <TextField
-          label="Contraseña"
-          id="password"
-          name="password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="current-password"
-          required
-        />
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Entrando...' : 'Entrar'}
-        </Button>
-      </form>
-      <p className="login-hint__title">Credenciales de la demo:</p>
-      <ul className="login-hint__list">
-        {DEMO_CREDENTIALS.map((credential) => (
-          <li key={credential.username}>
-            <code>{credential.username}</code> / <code>{credential.password}</code>
-          </li>
-        ))}
-      </ul>
-    </Panel>
+    <div className="login-page">
+      <Panel title="Iniciar sesión">
+        <form onSubmit={handleSubmit}>
+          <ErrorBanner message={error} />
+          <TextField
+            label="Usuario"
+            id="username"
+            name="username"
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            autoComplete="username"
+            required
+          />
+          <TextField
+            label="Contraseña"
+            id="password"
+            name="password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+            required
+          />
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Entrando...' : 'Entrar'}
+          </Button>
+        </form>
+        <p className="login-hint__title">Credenciales de la demo:</p>
+        <ul className="login-hint__list">
+          {DEMO_CREDENTIALS.map((credential) => (
+            <li key={credential.username}>
+              <code>{credential.username}</code> / <code>{credential.password}</code>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+    </div>
   )
 }

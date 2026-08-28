@@ -55,4 +55,18 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
     filterChain.doFilter(request, response);
   }
+
+  /**
+   * {@code OncePerRequestFilter} no filtra el redespacho async por defecto -- pero {@code
+   * ChatController#chatStream} (E06.3) sí lo dispara: la respuesta se completa async, vía {@code
+   * SseEmitter}, y el servlet container hace un segundo despacho (dispatcher {@code ASYNC}) para
+   * cerrarla. Sin este override, este filtro no corre en ese segundo despacho, el {@link
+   * SecurityContextHolder} llega vacío y la cadena de autorización rechaza una request que ya había
+   * autenticado -- con la respuesta ya comprometida (tokens ya enviados), un 403 en ese punto ni
+   * siquiera puede escribirse.
+   */
+  @Override
+  protected boolean shouldNotFilterAsyncDispatch() {
+    return false;
+  }
 }

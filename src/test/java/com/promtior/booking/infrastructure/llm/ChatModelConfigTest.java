@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
@@ -64,6 +67,46 @@ class ChatModelConfigTest {
 
   @Test
   void sinPerfilDeProveedorActivoNoSeCreaNingunChatModel() {
-    contextRunner.run(context -> assertTrue(context.getBeansOfType(ChatModel.class).isEmpty()));
+    contextRunner.run(
+        context -> {
+          assertTrue(context.getBeansOfType(ChatModel.class).isEmpty());
+          assertTrue(context.getBeansOfType(StreamingChatModel.class).isEmpty());
+        });
+  }
+
+  @Test
+  void conElPerfilGeminiActivoElBeanDeStreamingEsElFailoverHaciaGroq() {
+    contextRunner
+        .withPropertyValues("spring.profiles.active=gemini")
+        .run(
+            context -> {
+              assertEquals(1, context.getBeansOfType(StreamingChatModel.class).size());
+              assertInstanceOf(
+                  FailoverStreamingChatModel.class, context.getBean(StreamingChatModel.class));
+            });
+  }
+
+  @Test
+  void conElPerfilGroqActivoElBeanDeStreamingEsElClienteOpenAiCompatibleSinFailover() {
+    contextRunner
+        .withPropertyValues("spring.profiles.active=groq")
+        .run(
+            context -> {
+              assertEquals(1, context.getBeansOfType(StreamingChatModel.class).size());
+              assertInstanceOf(
+                  OpenAiStreamingChatModel.class, context.getBean(StreamingChatModel.class));
+            });
+  }
+
+  @Test
+  void conElPerfilOllamaActivoElBeanDeStreamingEsElClienteLocalSinFailover() {
+    contextRunner
+        .withPropertyValues("spring.profiles.active=ollama")
+        .run(
+            context -> {
+              assertEquals(1, context.getBeansOfType(StreamingChatModel.class).size());
+              assertInstanceOf(
+                  OllamaStreamingChatModel.class, context.getBean(StreamingChatModel.class));
+            });
   }
 }
