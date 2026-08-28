@@ -53,6 +53,21 @@ dominio en vez de dejar escapar la excepción de JDBC.
   primero ya persistió. Un contexto completo no aporta nada que este setup no tenga y es más lento
   de arrancar.
 
+## Efecto secundario: contenedor de Postgres singleton, no por clase
+Agregar `BookingConcurrencyTest` expuso un bug latente en `AbstractPostgresIntegrationTest`: con
+`@Testcontainers @Container` en un campo estático, el contenedor se reinicia en cada clase de test
+que lo hereda, pero el cacheo de `ApplicationContext` de Spring no se entera de ese reinicio. Dos
+clases con la misma configuración de slice (`BookingRepositoryTest` y `BookingConcurrencyTest`,
+ambas `@DataJpaTest` + `@Import(JpaBookingRepository.class)`) comparten el mismo contexto cacheado
+-- y por lo tanto el mismo `DataSource` --, pero para cuando la segunda corre, su contenedor ya
+reemplazó al que el `DataSource` cacheado sigue apuntando, que ya fue detenido. En CI (no en local,
+donde el orden de ejecución da otro resultado) esto hizo que `BookingConcurrencyTest` fallara el
+100% de las veces con `CannotGetJdbcConnectionException`, apuntando a un puerto de un contenedor ya
+muerto. Se cambió `AbstractPostgresIntegrationTest` a un contenedor único por JVM (arranca en un
+inicializador estático, sin `@Testcontainers`/`@Container`, con `@DynamicPropertySource` en vez de
+`@ServiceConnection`), para que el ciclo de vida del contenedor deje de estar atado al de la clase
+de test.
+
 ## Consecuencias
 La doble reserva es irrepresentable en la base incluso si algún caso de uso futuro olvida llamar a
 `Availability.conflict()` antes de guardar: el `INSERT` la rechaza igual. El costo es que
