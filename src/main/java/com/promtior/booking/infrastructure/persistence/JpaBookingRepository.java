@@ -7,6 +7,9 @@ import com.promtior.booking.domain.BookingError;
 import com.promtior.booking.domain.Room;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
@@ -14,8 +17,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 class JpaBookingRepository implements BookingRepository {
 
-  /** SQLSTATE de Postgres para "exclusion_violation" (Apéndice A de su documentación). */
-  private static final String EXCLUSION_VIOLATION_SQLSTATE = "23P01";
+  /**
+   * SQLSTATE de Postgres que significan "esta reserva chocó contra otra que se solapa": la
+   * violación limpia del constraint de exclusión ({@code exclusion_violation}) y el deadlock que
+   * Postgres puede reportar en su lugar cuando dos INSERT concurrentes se solapan y cada uno queda
+   * esperando el lock de la fila todavía no comprometida del otro mientras chequea el constraint
+   * ({@code deadlock_detected}, Apéndice A de la documentación de Postgres). Ese deadlock puntual
+   * solo ocurre cuando efectivamente hay un solapamiento real en vuelo, así que es equivalente al
+   * conflicto limpio para quien llama a {@code save}.
+   */
+  private static final Set<String> CONFLICT_SQLSTATES = Set.of("23P01", "40P01");
 
   private final SpringDataBookingRepository repository;
 
@@ -30,8 +41,8 @@ class JpaBookingRepository implements BookingRepository {
       // para que la violación del constraint de exclusión se traduzca acá y no escape más tarde
       // al hacer commit de la transacción.
       repository.saveAndFlush(BookingJpaEntity.fromDomain(booking));
-    } catch (DataIntegrityViolationException e) {
-      if (!isExclusionViolation(e)) {
+    } catch (DataIntegrityViolationException | ConcurrencyFailureException e) {
+      if (!isConflict(e)) {
         throw e;
       }
       throw new BookingConflictException(
@@ -39,10 +50,10 @@ class JpaBookingRepository implements BookingRepository {
     }
   }
 
-  private static boolean isExclusionViolation(DataIntegrityViolationException e) {
+  private static boolean isConflict(DataAccessException e) {
     Throwable cause = e.getMostSpecificCause();
     return cause instanceof SQLException sqlException
-        && EXCLUSION_VIOLATION_SQLSTATE.equals(sqlException.getSQLState());
+        && CONFLICT_SQLSTATES.contains(sqlException.getSQLState());
   }
 
   @Override
