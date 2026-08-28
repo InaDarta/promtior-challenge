@@ -18,3 +18,4 @@ correlativo.
 - [0007](0007-resolucion-del-usuario-actual.md) — Resolución del usuario actual vía un puerto de `application`
 - [0008](0008-cancelacion-de-reservas-y-exposicion-del-id.md) — Cancelación de reservas: id expuesto solo por el puerto, 403 que no revela existencia
 - [0009](0009-limites-del-tier-gratuito-de-gemini.md) — Límites del tier gratuito de Gemini y confirmación del proveedor primario
+- [0010](0010-streaming-del-chat.md) — Streaming del chat: errores in-band, `fetch` en vez de `EventSource`, failover acotado

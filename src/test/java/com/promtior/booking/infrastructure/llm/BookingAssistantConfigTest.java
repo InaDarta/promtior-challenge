@@ -1,6 +1,7 @@
 package com.promtior.booking.infrastructure.llm;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,8 +14,11 @@ import com.promtior.booking.domain.User;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import java.time.Clock;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -141,6 +145,40 @@ class BookingAssistantConfigTest {
 
               assertFalse(ultimaRespuesta.contains("turno-1 "));
               assertTrue(ultimaRespuesta.contains("turno-29"));
+            });
+  }
+
+  @Test
+  void sinUnStreamingChatModelEnElContextoElChatStreamFallaConLlmNotConfigured() throws Exception {
+    contextRunner.run(
+        context -> {
+          BookingAssistant assistant = context.getBean(BookingAssistant.class);
+          CompletableFuture<Throwable> error = new CompletableFuture<>();
+          assistant
+              .chatStream("user1", "hola")
+              .onPartialResponse(token -> {})
+              .onCompleteResponse(response -> {})
+              .onError(error::complete)
+              .start();
+          assertInstanceOf(LlmNotConfiguredException.class, error.get(2, TimeUnit.SECONDS));
+        });
+  }
+
+  @Test
+  void elChatStreamFuncionaConUnStreamingChatModelWireado() throws Exception {
+    contextRunner
+        .withBean(StreamingChatModel.class, EchoHistoryStreamingChatModel::new)
+        .run(
+            context -> {
+              BookingAssistant assistant = context.getBean(BookingAssistant.class);
+              CompletableFuture<String> done = new CompletableFuture<>();
+              assistant
+                  .chatStream("user1", "Reservame la sala A mañana a las 10")
+                  .onPartialResponse(token -> {})
+                  .onCompleteResponse(response -> done.complete(response.aiMessage().text()))
+                  .onError(done::completeExceptionally)
+                  .start();
+              assertTrue(done.get(2, TimeUnit.SECONDS).contains("sala A"));
             });
   }
 }
