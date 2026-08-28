@@ -11,7 +11,6 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import java.io.IOException;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
@@ -89,12 +88,5 @@ class FailoverChatModelTest {
         request -> {
           throw exceptionSupplier.get();
         });
-  }
-
-  private record StubChatModel(Function<ChatRequest, ChatResponse> handler) implements ChatModel {
-    @Override
-    public ChatResponse doChat(ChatRequest request) {
-      return handler.apply(request);
-    }
   }
 }
