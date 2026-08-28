@@ -13,3 +13,4 @@ correlativo.
 - [0002](0002-notebook-java-o-python.md) — Notebook del demo: Java con rapaio-jupyter-kernel
 - [0003](0003-horario-de-oficina-y-clock.md) — Horario de oficina, rechazo de reservas pasadas y `Clock` inyectable
 - [0004](0004-persistencia-de-booking.md) — Persistencia de `Booking`: sin id de dominio, columnas planas para las FK
+- [0005](0005-constraint-de-exclusion.md) — Constraint de exclusión contra la doble reserva y su traducción a `BookingError`
