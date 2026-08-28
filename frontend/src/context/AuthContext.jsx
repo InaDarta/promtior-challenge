@@ -1,22 +1,32 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useState } from 'react'
+import { getStoredUsername, login as apiLogin, logout as apiLogout } from '../api/client'
 
 const AuthContext = createContext(null)
 
 /**
- * Esqueleto sin implementación real: hoy no llama a `/api/me` ni persiste
- * sesión. Lo resuelve #39 (pantalla de chat) contra el endpoint real.
+ * No hay endpoint `/api/me`: la sesión no se "resuelve" contra el backend, se conoce porque el
+ * usuario acaba de loguearse (o porque ya había un usuario guardado en `sessionStorage` de una
+ * navegación previa). Si un request autenticado responde 401, quien lo hace es responsable de
+ * llamar a `logout` y redirigir a `/login`.
  */
 export function AuthProvider({ children }) {
+  const [username, setUsername] = useState(() => getStoredUsername())
+
+  async function login(user, password) {
+    await apiLogin(user, password)
+    setUsername(user)
+  }
+
+  function logout() {
+    apiLogout()
+    setUsername(null)
+  }
+
   const value = {
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    login: () => {
-      throw new Error('AuthContext.login: no implementado todavia (ver #39)')
-    },
-    logout: () => {
-      throw new Error('AuthContext.logout: no implementado todavia (ver #39)')
-    },
+    user: username,
+    isAuthenticated: username !== null,
+    login,
+    logout,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
