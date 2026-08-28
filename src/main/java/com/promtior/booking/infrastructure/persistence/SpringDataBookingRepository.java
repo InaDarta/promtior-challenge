@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface SpringDataBookingRepository extends JpaRepository<BookingJpaEntity, UUID> {
 
   List<BookingJpaEntity> findByRoomId(String roomId);
+
+  List<BookingJpaEntity> findByOwnerUsername(String ownerUsername);
 }

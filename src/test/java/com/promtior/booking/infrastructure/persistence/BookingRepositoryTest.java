@@ -42,6 +42,7 @@ class BookingRepositoryTest extends AbstractPostgresIntegrationTest {
   @BeforeEach
   void seedReferenciaDeLaFk() {
     jdbcTemplate.update("INSERT INTO app_user (username, password_hash) VALUES ('user1', 'x')");
+    jdbcTemplate.update("INSERT INTO app_user (username, password_hash) VALUES ('user2', 'x')");
   }
 
   @Test
@@ -60,5 +61,23 @@ class BookingRepositoryTest extends AbstractPostgresIntegrationTest {
     repository.save(new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE));
 
     assertTrue(repository.findByRoom(Room.D).isEmpty());
+  }
+
+  @Test
+  void guardaYRecuperaUnaReservaPorPropietario() {
+    Booking booking = new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE);
+
+    repository.save(booking);
+    List<Booking> encontradas = repository.findByOwner(OWNER);
+
+    assertEquals(1, encontradas.size());
+    assertEquals(booking, encontradas.get(0));
+  }
+
+  @Test
+  void noDevuelveReservasDeOtroPropietario() {
+    repository.save(new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE));
+
+    assertTrue(repository.findByOwner(new User("user2")).isEmpty());
   }
 }
