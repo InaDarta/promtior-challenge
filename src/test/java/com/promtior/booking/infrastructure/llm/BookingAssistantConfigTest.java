@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.promtior.booking.application.GetRoomSchedule;
+import com.promtior.booking.application.ListAvailableRooms;
+import com.promtior.booking.application.ListMyBookings;
+import com.promtior.booking.domain.User;
 import dev.langchain4j.model.chat.ChatModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -11,11 +15,26 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 /**
  * Prueba el criterio de aceptación de E05.3: dos usuarios tienen conversaciones independientes, y
  * el historial de un mismo usuario le llega al modelo en cada turno, sin dejarlo crecer sin límite.
+ * Las tools (E05.4) se arman con dobles vacíos: ninguno de estos tests ejercita tool calling real.
  */
 class BookingAssistantConfigTest {
 
   private final ApplicationContextRunner contextRunner =
-      new ApplicationContextRunner().withUserConfiguration(BookingAssistantConfig.class);
+      new ApplicationContextRunner()
+          .withUserConfiguration(BookingAssistantConfig.class)
+          .withBean(
+              ListAvailableRooms.class,
+              () -> new ListAvailableRooms(new InMemoryBookingRepository()))
+          .withBean(
+              GetRoomSchedule.class, () -> new GetRoomSchedule(new InMemoryBookingRepository()))
+          .withBean(
+              ListMyBookings.class,
+              () ->
+                  new ListMyBookings(
+                      new InMemoryBookingRepository(),
+                      new FakeCurrentUserProvider(new User("nadie"))))
+          .withBean(RoomQueryTools.class)
+          .withBean(BookingQueryTools.class);
 
   @Test
   void sinUnChatModelEnElContextoElAsistenteExisteYFallaAlConversar() {
