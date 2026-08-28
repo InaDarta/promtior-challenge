@@ -25,11 +25,11 @@ import org.springframework.context.annotation.Configuration;
  * arranque de toda la aplicación -- el resto de la API sigue funcionando igual sin credenciales de
  * LLM.
  *
- * <p>Las tools de consulta de E05.4 ({@link RoomQueryTools}, {@link BookingQueryTools}) y las de
- * escritura de E05.5 ({@link BookingTools}) se inyectan como parámetro obligatorio, igual que
- * cualquier otro bean de Spring: a diferencia del {@code ChatModel}, no hay ningún escenario en el
- * que no existan en producción, así que un test que arma este bean directamente (sin el resto del
- * contexto de Spring) tiene que proveerlas explícitamente.
+ * <p>Las tools de consulta de E05.4 ({@link RoomQueryTools}, {@link BookingQueryTools}), las de
+ * escritura de E05.5 ({@link BookingTools}) y el {@link BookingSystemPrompt} de E05.6 se inyectan
+ * como parámetro obligatorio, igual que cualquier otro bean de Spring: a diferencia del {@code
+ * ChatModel}, no hay ningún escenario en el que no existan en producción, así que un test que arma
+ * este bean directamente (sin el resto del contexto de Spring) tiene que proveerlos explícitamente.
  */
 @Configuration
 class BookingAssistantConfig {
@@ -44,6 +44,7 @@ class BookingAssistantConfig {
   BookingAssistant bookingAssistant(
       ObjectProvider<ChatModel> chatModelProvider,
       ObjectProvider<StreamingChatModel> streamingChatModelProvider,
+      BookingSystemPrompt bookingSystemPrompt,
       RoomQueryTools roomQueryTools,
       BookingQueryTools bookingQueryTools,
       BookingTools bookingTools) {
@@ -52,6 +53,7 @@ class BookingAssistantConfig {
         .streamingChatModel(deferredStreamingChatModel(streamingChatModelProvider))
         .chatMemoryProvider(
             memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
+        .systemMessageProvider(bookingSystemPrompt)
         .tools(roomQueryTools, bookingQueryTools, bookingTools)
         .build();
   }
