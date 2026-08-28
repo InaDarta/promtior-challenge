@@ -4,7 +4,7 @@ Chatbot con tool calling para reservar salas de reunión. Technical challenge de
 
 ## Stack
 
-Java 25 · Spring Boot 3.5 · LangChain4j · PostgreSQL · Gemini 2.5 Flash con Groq de respaldo · Railway.
+Java 25 · Spring Boot 3.5 · LangChain4j · PostgreSQL · Gemini 3.7 Flash con Groq de respaldo · Railway.
 
 ## Arquitectura
 
