@@ -15,7 +15,7 @@ public record Booking(String title, int attendeeCount, User owner, Room room, Bo
     Objects.requireNonNull(room, "room");
     Objects.requireNonNull(range, "range");
     if (title.isBlank()) {
-      throw new IllegalArgumentException("title no puede estar vacío ni contener solo espacios");
+      throw new BookingErrorException(new BookingError.MissingTitle());
     }
     if (title.length() > MAX_TITLE_LENGTH) {
       throw new IllegalArgumentException(
@@ -23,9 +23,7 @@ public record Booking(String title, int attendeeCount, User owner, Room room, Bo
               .formatted(MAX_TITLE_LENGTH, title.length()));
     }
     if (attendeeCount < 1 || attendeeCount > room.capacity()) {
-      throw new IllegalArgumentException(
-          "attendeeCount debe estar entre 1 y la capacidad de la sala %s (%d), pero fue %d"
-              .formatted(room, room.capacity(), attendeeCount));
+      throw new BookingErrorException(new BookingError.CapacityExceeded(room, attendeeCount));
     }
   }
 
@@ -45,9 +43,7 @@ public record Booking(String title, int attendeeCount, User owner, Room room, Bo
     Objects.requireNonNull(clock, "clock");
     LocalDateTime now = LocalDateTime.now(clock);
     if (range.start().start().isBefore(now)) {
-      throw new IllegalArgumentException(
-          "no se puede reservar un horario que ya pasó: %s es anterior a %s"
-              .formatted(range.start().start(), now));
+      throw new BookingErrorException(new BookingError.InThePast(range.start().start(), now));
     }
     return new Booking(title, attendeeCount, owner, room, range);
   }

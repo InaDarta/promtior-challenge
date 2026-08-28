@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.promtior.booking.domain.Booking;
+import com.promtior.booking.domain.BookingErrorException;
 import com.promtior.booking.domain.BookingRange;
 import com.promtior.booking.domain.Room;
 import com.promtior.booking.domain.TimeSlot;
@@ -45,7 +46,7 @@ class CreateBookingTest {
   @Test
   void unaViolacionDeUnaReglaDeDominioNuncaLlegaAPersistir() {
     assertThrows(
-        IllegalArgumentException.class, () -> createBooking.execute("", 3, Room.C, RANGE_FUTURA));
+        BookingErrorException.class, () -> createBooking.execute("", 3, Room.C, RANGE_FUTURA));
 
     assertTrue(repository.findByOwner(YO).isEmpty());
   }

@@ -2,15 +2,19 @@ package com.promtior.booking.infrastructure.rest;
 
 import com.promtior.booking.application.BookingConflictException;
 import com.promtior.booking.application.BookingNotOwnedException;
+import com.promtior.booking.domain.BookingErrorException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * Traduce las excepciones de {@code application} a códigos HTTP en vez de dejarlas escapar como un
- * 500. El mapeo fino por subtipo de {@code BookingError}, con un código estable por violación, es
- * el contrato de E04.4 -- acá solo se evita el stacktrace.
+ * Traduce las excepciones de {@code domain} y {@code application} a {@code
+ * application/problem+json} en vez de dejarlas escapar como un 500. El mapeo fino por subtipo de
+ * {@code BookingError}, con un código estable por violación y los datos de su causa, vive en {@link
+ * BookingProblems} (contrato de E04.4).
  */
 @RestControllerAdvice
 class BookingExceptionHandler {
@@ -25,13 +29,29 @@ class BookingExceptionHandler {
   }
 
   @ExceptionHandler(BookingConflictException.class)
-  ResponseEntity<ErrorResponse> onBookingConflict(BookingConflictException e) {
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
+  ResponseEntity<ProblemDetail> onBookingConflict(BookingConflictException e) {
+    return problemResponse(BookingProblems.from(e.conflict()));
   }
 
-  /** Violación de una invariante de dominio (título vacío, fuera de horario, capacidad, etc.). */
+  /**
+   * Violación de una regla de reserva con un {@link com.promtior.booking.domain.BookingError}
+   * propio.
+   */
+  @ExceptionHandler(BookingErrorException.class)
+  ResponseEntity<ProblemDetail> onBookingError(BookingErrorException e) {
+    return problemResponse(BookingProblems.from(e.error()));
+  }
+
+  /** Violación de una invariante de dominio que todavía no tiene un {@code BookingError} propio. */
   @ExceptionHandler(IllegalArgumentException.class)
-  ResponseEntity<ErrorResponse> onIllegalArgument(IllegalArgumentException e) {
-    return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+  ResponseEntity<ProblemDetail> onIllegalArgument(IllegalArgumentException e) {
+    return problemResponse(
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage()));
+  }
+
+  private static ResponseEntity<ProblemDetail> problemResponse(ProblemDetail problem) {
+    return ResponseEntity.status(problem.getStatus())
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
   }
 }
