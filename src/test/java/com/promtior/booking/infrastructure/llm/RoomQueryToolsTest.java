@@ -29,6 +29,11 @@ class RoomQueryToolsTest {
   private static final LocalDateTime START = LocalDateTime.of(2026, 8, 31, 10, 0);
   private static final LocalDateTime END = LocalDateTime.of(2026, 8, 31, 11, 0);
 
+  /** Las tools reciben {@code start}/{@code end} como {@link String} ISO-8601. */
+  private static final String START_ISO = START.toString();
+
+  private static final String END_ISO = END.toString();
+
   private final InMemoryBookingRepository repository = new InMemoryBookingRepository();
   private final RoomQueryTools tools =
       new RoomQueryTools(new ListAvailableRooms(repository), new GetRoomSchedule(repository));
@@ -43,14 +48,14 @@ class RoomQueryToolsTest {
             Room.C,
             BookingRange.between(new TimeSlot(START), new TimeSlot(START))));
 
-    List<Room> libres = tools.listAvailableRooms(START, END, null);
+    List<Room> libres = tools.listAvailableRooms(START_ISO, END_ISO, null);
 
     assertEquals(List.of(Room.A, Room.B, Room.D, Room.E), libres);
   }
 
   @Test
   void listAvailableRoomsFiltraPorCapacidadMinima() {
-    List<Room> libres = tools.listAvailableRooms(START, END, 10);
+    List<Room> libres = tools.listAvailableRooms(START_ISO, END_ISO, 10);
 
     assertEquals(List.of(Room.D, Room.E), libres);
   }
@@ -65,7 +70,7 @@ class RoomQueryToolsTest {
             Room.C,
             BookingRange.between(new TimeSlot(START), new TimeSlot(START))));
 
-    AvailabilitySummary agenda = tools.getRoomSchedule(Room.C, START, END);
+    AvailabilitySummary agenda = tools.getRoomSchedule(Room.C, START_ISO, END_ISO);
 
     assertEquals(Room.C, agenda.room());
     assertEquals(

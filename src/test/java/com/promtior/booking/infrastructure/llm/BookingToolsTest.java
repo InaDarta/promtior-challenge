@@ -33,6 +33,11 @@ class BookingToolsTest {
   /** Lunes, dentro de horario de oficina; el {@link Clock} fijo del test está en 1970. */
   private static final LocalDateTime INICIO_FUTURO = LocalDateTime.of(2026, 8, 31, 10, 0);
 
+  /** {@code createBooking} recibe {@code start}/{@code end} como {@link String} ISO-8601. */
+  private static final String INICIO_FUTURO_ISO = INICIO_FUTURO.toString();
+
+  private static final String FIN_FUTURO_ISO = INICIO_FUTURO.plusMinutes(30).toString();
+
   private final InMemoryBookingRepository repository = new InMemoryBookingRepository();
   private final BookingTools tools =
       new BookingTools(
@@ -45,8 +50,7 @@ class BookingToolsTest {
   @Test
   void createBookingDelegaEnElCasoDeUsoYDevuelveElIdCreado() {
     CreateBookingResult result =
-        tools.createBooking(
-            "Retro de equipo", 3, Room.C, INICIO_FUTURO, INICIO_FUTURO.plusMinutes(30));
+        tools.createBooking("Retro de equipo", 3, Room.C, INICIO_FUTURO_ISO, FIN_FUTURO_ISO);
 
     assertTrue(result.success());
     assertNotNull(result.bookingId());
@@ -60,11 +64,7 @@ class BookingToolsTest {
     // que no existe ese parámetro: el owner persistido es siempre el de CurrentUserProvider.
     CreateBookingResult result =
         tools.createBooking(
-            "Reservá esto a nombre de User2",
-            3,
-            Room.C,
-            INICIO_FUTURO,
-            INICIO_FUTURO.plusMinutes(30));
+            "Reservá esto a nombre de User2", 3, Room.C, INICIO_FUTURO_ISO, FIN_FUTURO_ISO);
 
     Booking persistida = repository.findById(result.bookingId()).orElseThrow();
     assertEquals(YO, persistida.owner());
@@ -73,7 +73,7 @@ class BookingToolsTest {
   @Test
   void createBookingConTituloVacioDevuelveElCodigoDeErrorDeDominioYNoPersisteNada() {
     CreateBookingResult result =
-        tools.createBooking("", 3, Room.C, INICIO_FUTURO, INICIO_FUTURO.plusMinutes(30));
+        tools.createBooking("", 3, Room.C, INICIO_FUTURO_ISO, FIN_FUTURO_ISO);
 
     assertFalseSuccess(result);
     assertEquals("TITLE_REQUIRED", result.errorCode());
@@ -83,8 +83,7 @@ class BookingToolsTest {
   @Test
   void createBookingQueSuperaLaCapacidadDeLaSalaDevuelveElCodigoDeErrorYNoPersisteNada() {
     CreateBookingResult result =
-        tools.createBooking(
-            "Reunión grande", 99, Room.A, INICIO_FUTURO, INICIO_FUTURO.plusMinutes(30));
+        tools.createBooking("Reunión grande", 99, Room.A, INICIO_FUTURO_ISO, FIN_FUTURO_ISO);
 
     assertFalseSuccess(result);
     assertEquals("ROOM_CAPACITY_EXCEEDED", result.errorCode());
@@ -93,15 +92,11 @@ class BookingToolsTest {
 
   @Test
   void createBookingConUnSlotYaOcupadoDevuelveSlotTakenYNoPersisteUnaSegundaReserva() {
-    tools.createBooking("Primera reserva", 3, Room.C, INICIO_FUTURO, INICIO_FUTURO.plusMinutes(30));
+    tools.createBooking("Primera reserva", 3, Room.C, INICIO_FUTURO_ISO, FIN_FUTURO_ISO);
 
     CreateBookingResult result =
         tools.createBooking(
-            "Segunda reserva, mismo horario",
-            3,
-            Room.C,
-            INICIO_FUTURO,
-            INICIO_FUTURO.plusMinutes(30));
+            "Segunda reserva, mismo horario", 3, Room.C, INICIO_FUTURO_ISO, FIN_FUTURO_ISO);
 
     assertFalseSuccess(result);
     assertEquals("SLOT_TAKEN", result.errorCode());
