@@ -24,6 +24,17 @@ dominio en vez de dejar escapar la excepción de JDBC.
   `23P01` (`exclusion_violation` en el Apéndice A de la documentación de Postgres). El código de
   clase `23` (integridad referencial) ya distingue `23P01` de `23503` (FK) o `23514` (check), así
   que no hace falta acoplarse al nombre literal `booking_no_overlap`.
+- **También se atrapa `40P01` (`deadlock_detected`), no solo `23P01`**: bajo `EXCLUDE USING gist`
+  con inserts concurrentes, Postgres no siempre resuelve el conflicto con la violación limpia de
+  exclusión -- a veces ambas transacciones quedan esperando el lock de la fila todavía no
+  comprometida de la otra mientras chequean el constraint, y Postgres corta ese ciclo abortando una
+  de las dos con un deadlock en vez de un `exclusion_violation`. `CannotAcquireLockException` (la
+  excepción de Spring que envuelve ese deadlock) no extiende `DataIntegrityViolationException` --
+  extiende `ConcurrencyFailureException` --, así que el `catch` necesita cubrir ambos tipos. Mapear
+  ese deadlock puntual al mismo `BookingConflictException` es correcto porque solo ocurre cuando
+  efectivamente hay un solapamiento real en vuelo: sin overlap, el chequeo del índice GiST no genera
+  esa espera cruzada. Encontrado corriendo `BookingConcurrencyTest` repetidas veces contra Postgres
+  real (Testcontainers) -- el ~10% de las corridas lo disparaba; ver #73.
 - **El conflicto se traduce a `BookingError.SlotOccupied` con el rango completo pedido**, no con los
   slots exactos que efectivamente chocan: el adaptador solo sabe que el `INSERT` fue rechazado, no
   contra qué reserva exacta. Pedir ese detalle exigiría una consulta adicional después del rechazo,
