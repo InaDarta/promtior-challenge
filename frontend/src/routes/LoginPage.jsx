@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError, login } from '../api/client'
+import { ApiError } from '../api/client'
 import { Button, ErrorBanner, Panel, TextField } from '../components'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const DEMO_CREDENTIALS = [
   { username: 'User1', password: 'TechnicalChallengePromtior' },
@@ -10,6 +11,7 @@ const DEMO_CREDENTIALS = [
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
