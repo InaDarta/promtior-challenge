@@ -126,6 +126,95 @@ class BookingControllerTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
+  void crearUnaReservaDeMasDeTresHorasDevuelve400ConCodigoMaxDurationExceeded() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            post("/api/bookings")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    createBookingBody(
+                        "Reunión larga",
+                        3,
+                        Room.A,
+                        LocalDateTime.of(2026, 9, 1, 15, 0),
+                        LocalDateTime.of(2026, 9, 1, 18, 30))))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.code").value("MAX_DURATION_EXCEEDED"))
+        .andExpect(jsonPath("$.requestedSlotCount").value(7))
+        .andExpect(jsonPath("$.maxSlotCount").value(6));
+  }
+
+  @Test
+  void crearUnaReservaUnSabadoDevuelve400ConCodigoOutsideOfficeHours() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            post("/api/bookings")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    createBookingBody(
+                        "Reunión de fin de semana",
+                        3,
+                        Room.A,
+                        LocalDateTime.of(2026, 9, 5, 10, 0),
+                        LocalDateTime.of(2026, 9, 5, 10, 30))))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.code").value("OUTSIDE_OFFICE_HOURS"));
+  }
+
+  @Test
+  void crearUnaReservaEnElPasadoDevuelve400ConCodigoInThePast() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            post("/api/bookings")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    createBookingBody(
+                        "Reunión que ya pasó",
+                        3,
+                        Room.A,
+                        LocalDateTime.of(2020, 1, 6, 10, 0),
+                        LocalDateTime.of(2020, 1, 6, 10, 30))))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.code").value("IN_THE_PAST"));
+  }
+
+  /**
+   * {@code attendeeCount} inválido lo rechaza la validación de bean del DTO antes de llegar al
+   * dominio, así que no lleva el {@code code} del contrato de E04.4 -- ese cubre las violaciones de
+   * una regla de negocio, no la forma del request.
+   */
+  @Test
+  void crearUnaReservaConCeroAsistentesDevuelve400DeValidacion() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            post("/api/bookings")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    createBookingBody(
+                        "Reunión sin asistentes",
+                        0,
+                        Room.A,
+                        LocalDateTime.of(2026, 9, 1, 16, 0),
+                        LocalDateTime.of(2026, 9, 1, 16, 30))))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void listarMisReservasSoloDevuelveLasPropias() throws Exception {
     String tokenUser1 = login("User1");
     String tokenUser2 = login("User2");
