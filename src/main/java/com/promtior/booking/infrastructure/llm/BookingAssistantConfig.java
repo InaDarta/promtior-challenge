@@ -22,6 +22,10 @@ import org.springframework.context.annotation.Configuration;
  * proveedor configurado, conversar lanza {@link LlmNotConfiguredException} en vez de fallar el
  * arranque de toda la aplicación -- el resto de la API sigue funcionando igual sin credenciales de
  * LLM.
+ *
+ * <p>{@link BookingTools} (E05.5) se registra igual vía {@link ObjectProvider}, no como parámetro
+ * obligatorio: así un test que arma este bean sin el resto del contexto de Spring (sin {@code
+ * CreateBooking}/{@code CancelBooking}) sigue pudiendo instanciar el asistente, solo que sin tools.
  */
 @Configuration
 class BookingAssistantConfig {
@@ -33,12 +37,19 @@ class BookingAssistantConfig {
   private static final int MAX_MESSAGES_EN_MEMORIA = 20;
 
   @Bean
-  BookingAssistant bookingAssistant(ObjectProvider<ChatModel> chatModelProvider) {
-    return AiServices.builder(BookingAssistant.class)
-        .chatModel(deferredChatModel(chatModelProvider))
-        .chatMemoryProvider(
-            memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
-        .build();
+  BookingAssistant bookingAssistant(
+      ObjectProvider<ChatModel> chatModelProvider,
+      ObjectProvider<BookingTools> bookingToolsProvider) {
+    AiServices<BookingAssistant> assistant =
+        AiServices.builder(BookingAssistant.class)
+            .chatModel(deferredChatModel(chatModelProvider))
+            .chatMemoryProvider(
+                memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA));
+    BookingTools bookingTools = bookingToolsProvider.getIfAvailable();
+    if (bookingTools != null) {
+      assistant.tools(bookingTools);
+    }
+    return assistant.build();
   }
 
   private static ChatModel deferredChatModel(ObjectProvider<ChatModel> chatModelProvider) {

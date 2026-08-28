@@ -12,5 +12,10 @@
  * atiende la conversación; {@link com.promtior.booking.infrastructure.llm.BookingAssistantConfig}
  * arma su proxy sobre el {@code ChatModel} activo, con una ventana de memoria acotada por sesión.
  * Solo existe si hay un {@code ChatModel} en el contexto -- ver E05.3.
+ *
+ * <p>{@link com.promtior.booking.infrastructure.llm.BookingTools} son las tools de escritura que
+ * ese proxy registra (E05.5): adaptadores finos sobre {@code CreateBooking}/{@code CancelBooking}
+ * que nunca reciben un usuario como parámetro (ADR 0007) y traducen una violación de regla a un
+ * resultado estructurado en vez de dejar escapar la excepción de dominio.
  */
 package com.promtior.booking.infrastructure.llm;

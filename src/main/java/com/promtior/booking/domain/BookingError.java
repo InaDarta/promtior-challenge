@@ -83,4 +83,22 @@ public sealed interface BookingError {
       case InThePast e -> "el inicio %s ya pasó, ahora es %s".formatted(e.start(), e.now());
     };
   }
+
+  /**
+   * Código estable por tipo de violación (contrato de E04.4): lo consume tanto {@code
+   * infrastructure.rest.BookingProblems} como {@code infrastructure.llm.BookingTools} para que REST
+   * y las tools del agente (E05) devuelvan el mismo código ante el mismo error de dominio.
+   * Exhaustivo por tipo de {@link BookingError}, sin rama default.
+   */
+  default String code() {
+    return switch (this) {
+      case CapacityExceeded e -> "ROOM_CAPACITY_EXCEEDED";
+      case SlotOccupied e -> "SLOT_TAKEN";
+      case MaxDurationExceeded e -> "MAX_DURATION_EXCEEDED";
+      case NonContiguousRange e -> "NON_CONTIGUOUS_RANGE";
+      case OutsideOfficeHours e -> "OUTSIDE_OFFICE_HOURS";
+      case MissingTitle e -> "TITLE_REQUIRED";
+      case InThePast e -> "IN_THE_PAST";
+    };
+  }
 }

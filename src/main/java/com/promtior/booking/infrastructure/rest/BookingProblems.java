@@ -19,7 +19,6 @@ final class BookingProblems {
       case BookingError.CapacityExceeded e ->
           problem(
               HttpStatus.BAD_REQUEST,
-              "ROOM_CAPACITY_EXCEEDED",
               e,
               Map.of(
                   "room", e.room(),
@@ -28,7 +27,6 @@ final class BookingProblems {
       case BookingError.SlotOccupied e ->
           problem(
               HttpStatus.CONFLICT,
-              "SLOT_TAKEN",
               e,
               Map.of(
                   "room", e.room(),
@@ -37,7 +35,6 @@ final class BookingProblems {
       case BookingError.MaxDurationExceeded e ->
           problem(
               HttpStatus.BAD_REQUEST,
-              "MAX_DURATION_EXCEEDED",
               e,
               Map.of(
                   "requestedSlotCount", e.requestedSlotCount(),
@@ -45,29 +42,22 @@ final class BookingProblems {
       case BookingError.NonContiguousRange e ->
           problem(
               HttpStatus.BAD_REQUEST,
-              "NON_CONTIGUOUS_RANGE",
               e,
               Map.of(
                   "before", TimeSlotResponse.from(e.before()),
                   "after", TimeSlotResponse.from(e.after())));
       case BookingError.OutsideOfficeHours e ->
-          problem(
-              HttpStatus.BAD_REQUEST,
-              "OUTSIDE_OFFICE_HOURS",
-              e,
-              Map.of("start", e.start(), "end", e.end()));
-      case BookingError.MissingTitle e ->
-          problem(HttpStatus.BAD_REQUEST, "TITLE_REQUIRED", e, Map.of());
+          problem(HttpStatus.BAD_REQUEST, e, Map.of("start", e.start(), "end", e.end()));
+      case BookingError.MissingTitle e -> problem(HttpStatus.BAD_REQUEST, e, Map.of());
       case BookingError.InThePast e ->
-          problem(
-              HttpStatus.BAD_REQUEST, "IN_THE_PAST", e, Map.of("start", e.start(), "now", e.now()));
+          problem(HttpStatus.BAD_REQUEST, e, Map.of("start", e.start(), "now", e.now()));
     };
   }
 
   private static ProblemDetail problem(
-      HttpStatus status, String code, BookingError error, Map<String, Object> causeData) {
+      HttpStatus status, BookingError error, Map<String, Object> causeData) {
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, error.message());
-    problem.setProperty("code", code);
+    problem.setProperty("code", error.code());
     causeData.forEach(problem::setProperty);
     return problem;
   }
