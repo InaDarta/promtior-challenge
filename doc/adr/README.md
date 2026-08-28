@@ -14,3 +14,4 @@ correlativo.
 - [0003](0003-horario-de-oficina-y-clock.md) — Horario de oficina, rechazo de reservas pasadas y `Clock` inyectable
 - [0004](0004-persistencia-de-booking.md) — Persistencia de `Booking`: sin id de dominio, columnas planas para las FK
 - [0005](0005-constraint-de-exclusion.md) — Constraint de exclusión contra la doble reserva y su traducción a `BookingError`
+- [0006](0006-spring-security-y-jwt.md) — Spring Security con sesiones sin estado y JWT vía jjwt
