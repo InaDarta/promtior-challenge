@@ -2,13 +2,16 @@ package com.promtior.booking.infrastructure.persistence;
 
 import com.promtior.booking.application.BookingConflictException;
 import com.promtior.booking.application.BookingRepository;
+import com.promtior.booking.application.IdentifiedBooking;
 import com.promtior.booking.domain.Booking;
 import com.promtior.booking.domain.BookingError;
 import com.promtior.booking.domain.Room;
 import com.promtior.booking.domain.User;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,12 +39,12 @@ class JpaBookingRepository implements BookingRepository {
   }
 
   @Override
-  public void save(Booking booking) {
+  public UUID save(Booking booking) {
     try {
       // flush, no solo save: el INSERT tiene que golpear la base ahora, dentro de este método,
       // para que la violación del constraint de exclusión se traduzca acá y no escape más tarde
       // al hacer commit de la transacción.
-      repository.saveAndFlush(BookingJpaEntity.fromDomain(booking));
+      return repository.saveAndFlush(BookingJpaEntity.fromDomain(booking)).getId();
     } catch (DataIntegrityViolationException | ConcurrencyFailureException e) {
       if (!isConflict(e)) {
         throw e;
@@ -63,9 +66,19 @@ class JpaBookingRepository implements BookingRepository {
   }
 
   @Override
-  public List<Booking> findByOwner(User owner) {
+  public List<IdentifiedBooking> findByOwner(User owner) {
     return repository.findByOwnerUsername(owner.username()).stream()
-        .map(BookingJpaEntity::toDomain)
+        .map(entity -> new IdentifiedBooking(entity.getId(), entity.toDomain()))
         .toList();
+  }
+
+  @Override
+  public Optional<Booking> findById(UUID id) {
+    return repository.findById(id).map(BookingJpaEntity::toDomain);
+  }
+
+  @Override
+  public void deleteById(UUID id) {
+    repository.deleteById(id);
   }
 }
