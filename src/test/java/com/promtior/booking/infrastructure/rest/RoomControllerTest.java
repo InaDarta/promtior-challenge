@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -112,6 +113,47 @@ class RoomControllerTest extends AbstractPostgresIntegrationTest {
         .andExpect(jsonPath("$.occupiedSlots.length()").value(1))
         .andExpect(jsonPath("$.freeSlots.length()").value(1))
         .andExpect(jsonPath("$.occupiedSlots[0].start").value("2026-09-02T13:00:00"));
+  }
+
+  @Test
+  void salasDisponiblesConEndAnteriorAStartDevuelve400() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            get("/api/rooms/available")
+                .header("Authorization", "Bearer " + token)
+                .param("start", "2026-09-02T10:00:00")
+                .param("end", "2026-09-02T09:00:00"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+  }
+
+  @Test
+  void agendaDeUnaSalaConEndAnteriorAStartDevuelve400() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            get("/api/rooms/{room}/schedule", "B")
+                .header("Authorization", "Bearer " + token)
+                .param("start", "2026-09-02T10:00:00")
+                .param("end", "2026-09-02T09:00:00"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+  }
+
+  @Test
+  void agendaDeUnaSalaInexistenteDevuelve400() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            get("/api/rooms/{room}/schedule", "Z")
+                .header("Authorization", "Bearer " + token)
+                .param("start", "2026-09-02T09:00:00")
+                .param("end", "2026-09-02T09:30:00"))
+        .andExpect(status().isBadRequest());
   }
 
   private String login(String username) throws Exception {
