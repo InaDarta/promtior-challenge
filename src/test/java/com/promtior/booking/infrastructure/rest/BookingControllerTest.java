@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,7 +53,7 @@ class BookingControllerTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
-  void crearUnaReservaConTituloVacioDevuelve400() throws Exception {
+  void crearUnaReservaConTituloVacioDevuelve400ConCodigoTitleRequired() throws Exception {
     String token = login("User1");
 
     mockMvc
@@ -67,11 +68,14 @@ class BookingControllerTest extends AbstractPostgresIntegrationTest {
                         Room.A,
                         LocalDateTime.of(2026, 9, 1, 9, 30),
                         LocalDateTime.of(2026, 9, 1, 10, 0))))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.code").value("TITLE_REQUIRED"));
   }
 
   @Test
-  void crearUnaReservaQueSuperaLaCapacidadDeLaSalaDevuelve400() throws Exception {
+  void crearUnaReservaQueSuperaLaCapacidadDeLaSalaDevuelve400ConCodigoYLosDatosDeLaCausa()
+      throws Exception {
     String token = login("User1");
 
     mockMvc
@@ -87,11 +91,16 @@ class BookingControllerTest extends AbstractPostgresIntegrationTest {
                         LocalDateTime.of(2026, 9, 1, 10, 0),
                         LocalDateTime.of(2026, 9, 1, 10, 30))))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value(not("")));
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.detail").value(not("")))
+        .andExpect(jsonPath("$.code").value("ROOM_CAPACITY_EXCEEDED"))
+        .andExpect(jsonPath("$.room").value("A"))
+        .andExpect(jsonPath("$.roomCapacity").value(4))
+        .andExpect(jsonPath("$.requestedAttendees").value(99));
   }
 
   @Test
-  void crearDosReservasQueSeSolapanEnLaMismaSalaDevuelve409() throws Exception {
+  void crearDosReservasQueSeSolapanEnLaMismaSalaDevuelve409ConCodigoSlotTaken() throws Exception {
     String token = login("User1");
     LocalDateTime start = LocalDateTime.of(2026, 9, 1, 11, 0);
     LocalDateTime end = LocalDateTime.of(2026, 9, 1, 11, 30);
@@ -110,7 +119,10 @@ class BookingControllerTest extends AbstractPostgresIntegrationTest {
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createBookingBody("Segunda", 2, Room.B, start, end)))
-        .andExpect(status().isConflict());
+        .andExpect(status().isConflict())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.code").value("SLOT_TAKEN"))
+        .andExpect(jsonPath("$.room").value("B"));
   }
 
   @Test

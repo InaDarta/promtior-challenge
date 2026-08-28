@@ -25,9 +25,12 @@ class BookingRangeTest {
 
   @Test
   void rechazaUnHuecoEntreSlots() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new BookingRange(List.of(slotAt(10, 0), slotAt(11, 0))));
+    BookingErrorException exception =
+        assertThrows(
+            BookingErrorException.class,
+            () -> new BookingRange(List.of(slotAt(10, 0), slotAt(11, 0))));
+    assertEquals(
+        new BookingError.NonContiguousRange(slotAt(10, 0), slotAt(11, 0)), exception.error());
   }
 
   @Test
@@ -75,17 +78,15 @@ class BookingRangeTest {
             slotAt(11, 0),
             slotAt(11, 30),
             slotAt(12, 0));
-    IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> new BookingRange(sieteSlots));
-    assertEquals(
-        "BookingRange no puede superar los 6 slots (3 horas), pero tiene 7",
-        exception.getMessage());
+    BookingErrorException exception =
+        assertThrows(BookingErrorException.class, () -> new BookingRange(sieteSlots));
+    assertEquals(new BookingError.MaxDurationExceeded(7, 6), exception.error());
   }
 
   @Test
   void betweenRechazaTresHorasYMedia() {
     assertThrows(
-        IllegalArgumentException.class, () -> BookingRange.between(slotAt(9, 0), slotAt(12, 0)));
+        BookingErrorException.class, () -> BookingRange.between(slotAt(9, 0), slotAt(12, 0)));
   }
 
   @Test
@@ -138,23 +139,23 @@ class BookingRangeTest {
 
   @Test
   void rechazaUnInicioAnteriorAlHorarioDeOficina() {
-    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(slotAt(7, 30))));
+    assertThrows(BookingErrorException.class, () -> new BookingRange(List.of(slotAt(7, 30))));
   }
 
   @Test
   void rechazaUnFinPosteriorAlHorarioDeOficina() {
-    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(slotAt(20, 0))));
+    assertThrows(BookingErrorException.class, () -> new BookingRange(List.of(slotAt(20, 0))));
   }
 
   @Test
   void rechazaUnSabado() {
     TimeSlot sabado = new TimeSlot(LocalDateTime.of(2026, 8, 29, 10, 0));
-    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(sabado)));
+    assertThrows(BookingErrorException.class, () -> new BookingRange(List.of(sabado)));
   }
 
   @Test
   void rechazaUnDomingo() {
     TimeSlot domingo = new TimeSlot(LocalDateTime.of(2026, 8, 30, 10, 0));
-    assertThrows(IllegalArgumentException.class, () -> new BookingRange(List.of(domingo)));
+    assertThrows(BookingErrorException.class, () -> new BookingRange(List.of(domingo)));
   }
 }

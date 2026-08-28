@@ -29,32 +29,26 @@ public record BookingRange(List<TimeSlot> slots) {
     }
     slots = List.copyOf(slots);
     if (slots.size() > MAX_SLOT_COUNT) {
-      throw new IllegalArgumentException(
-          "BookingRange no puede superar los %d slots (3 horas), pero tiene %d"
-              .formatted(MAX_SLOT_COUNT, slots.size()));
+      throw new BookingErrorException(
+          new BookingError.MaxDurationExceeded(slots.size(), MAX_SLOT_COUNT));
     }
     for (int i = 1; i < slots.size(); i++) {
       TimeSlot previous = slots.get(i - 1);
       TimeSlot current = slots.get(i);
       if (!current.start().equals(previous.end())) {
-        throw new IllegalArgumentException(
-            "BookingRange requiere slots contiguos: hueco entre %s y %s"
-                .formatted(previous.start(), current.start()));
+        throw new BookingErrorException(new BookingError.NonContiguousRange(previous, current));
       }
     }
     LocalDateTime start = slots.get(0).start();
     LocalDateTime end = slots.get(slots.size() - 1).end();
     DayOfWeek day = start.getDayOfWeek();
     if (day.compareTo(FIRST_OFFICE_DAY) < 0 || day.compareTo(LAST_OFFICE_DAY) > 0) {
-      throw new IllegalArgumentException(
-          "BookingRange debe caer de lunes a viernes, pero %s es %s".formatted(start, day));
+      throw new BookingErrorException(new BookingError.OutsideOfficeHours(start, end));
     }
     if (start.toLocalTime().isBefore(OFFICE_OPENING)
         || !end.toLocalDate().equals(start.toLocalDate())
         || end.toLocalTime().isAfter(OFFICE_CLOSING)) {
-      throw new IllegalArgumentException(
-          "BookingRange debe caer dentro del horario de oficina (%s a %s), pero va de %s a %s"
-              .formatted(OFFICE_OPENING, OFFICE_CLOSING, start, end));
+      throw new BookingErrorException(new BookingError.OutsideOfficeHours(start, end));
     }
   }
 
