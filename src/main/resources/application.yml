@@ -15,6 +15,13 @@ spring:
 server:
   port: 8080
 
+app:
+  jwt:
+    # Clave HS256 en base64 (>= 256 bits). El default solo alcanza para dev/tests locales -- en
+    # cualquier despliegue real hay que fijar JWT_SECRET con un valor propio. Ver ADR 0006.
+    secret: ${JWT_SECRET:1+3i4e8C3sz0BOsZi3rLlmWmRiUd2p7zyvQZI072KThUIuI2vNW9c8RY8d8XWOvv}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+
 management:
   endpoints:
     web:
