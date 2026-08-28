@@ -2,6 +2,7 @@ package com.promtior.booking.application;
 
 import java.util.List;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * Reservas del usuario autenticado, junto con el id que necesita {@link CancelBooking} para
@@ -12,6 +13,7 @@ import java.util.Objects;
  * ellas. La identidad se resuelve vía {@link CurrentUserProvider} (ADR 0007), nunca como argumento
  * de este caso de uso.
  */
+@Service
 public class ListMyBookings {
 
   private final BookingRepository bookingRepository;
