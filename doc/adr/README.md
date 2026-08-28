@@ -15,3 +15,4 @@ correlativo.
 - [0004](0004-persistencia-de-booking.md) — Persistencia de `Booking`: sin id de dominio, columnas planas para las FK
 - [0005](0005-constraint-de-exclusion.md) — Constraint de exclusión contra la doble reserva y su traducción a `BookingError`
 - [0006](0006-spring-security-y-jwt.md) — Spring Security con sesiones sin estado y JWT vía jjwt
+- [0007](0007-resolucion-del-usuario-actual.md) — Resolución del usuario actual vía un puerto de `application`
