@@ -14,11 +14,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Doble de {@link BookingRepository} en memoria, para testear {@link BookingTools} sin Spring ni
- * base. A diferencia del doble homónimo de {@code application}, {@link #save} simula el constraint
- * de exclusión de Postgres (RN-07): dos reservas de la misma sala que se solapan no coexisten.
+ * Doble de {@link BookingRepository} en memoria, para testear las tools de consulta (E05.4) y de
+ * escritura (E05.5) sin Spring ni base. {@link #save} simula el constraint de exclusión de Postgres
+ * (RN-07): dos reservas de la misma sala que se solapan no coexisten.
  */
-class FakeBookingRepository implements BookingRepository {
+class InMemoryBookingRepository implements BookingRepository {
 
   private final Map<UUID, Booking> bookings = new LinkedHashMap<>();
 

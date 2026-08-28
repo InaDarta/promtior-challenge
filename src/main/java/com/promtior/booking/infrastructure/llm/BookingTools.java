@@ -7,7 +7,6 @@ import com.promtior.booking.application.CreateBooking;
 import com.promtior.booking.domain.BookingErrorException;
 import com.promtior.booking.domain.BookingRange;
 import com.promtior.booking.domain.Room;
-import com.promtior.booking.domain.TimeSlot;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import java.time.LocalDateTime;
@@ -50,8 +49,7 @@ class BookingTools {
       @P("Inicio de la reserva, formato ISO-8601 (ej: 2026-08-31T10:00:00)") LocalDateTime start,
       @P("Fin de la reserva, formato ISO-8601 (ej: 2026-08-31T11:00:00)") LocalDateTime end) {
     try {
-      BookingRange range =
-          BookingRange.between(new TimeSlot(start), new TimeSlot(end.minusMinutes(30)));
+      BookingRange range = BookingRanges.of(start, end);
       UUID bookingId = createBookingUseCase.execute(title, attendeeCount, room, range);
       return CreateBookingResult.ok(bookingId);
     } catch (BookingErrorException e) {

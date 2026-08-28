@@ -33,7 +33,7 @@ class BookingToolsTest {
   /** Lunes, dentro de horario de oficina; el {@link Clock} fijo del test está en 1970. */
   private static final LocalDateTime INICIO_FUTURO = LocalDateTime.of(2026, 8, 31, 10, 0);
 
-  private final FakeBookingRepository repository = new FakeBookingRepository();
+  private final InMemoryBookingRepository repository = new InMemoryBookingRepository();
   private final BookingTools tools =
       new BookingTools(
           new CreateBooking(

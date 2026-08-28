@@ -23,9 +23,11 @@ import org.springframework.context.annotation.Configuration;
  * arranque de toda la aplicación -- el resto de la API sigue funcionando igual sin credenciales de
  * LLM.
  *
- * <p>{@link BookingTools} (E05.5) se registra igual vía {@link ObjectProvider}, no como parámetro
- * obligatorio: así un test que arma este bean sin el resto del contexto de Spring (sin {@code
- * CreateBooking}/{@code CancelBooking}) sigue pudiendo instanciar el asistente, solo que sin tools.
+ * <p>Las tools de consulta de E05.4 ({@link RoomQueryTools}, {@link BookingQueryTools}) y las de
+ * escritura de E05.5 ({@link BookingTools}) se inyectan como parámetro obligatorio, igual que
+ * cualquier otro bean de Spring: a diferencia del {@code ChatModel}, no hay ningún escenario en el
+ * que no existan en producción, así que un test que arma este bean directamente (sin el resto del
+ * contexto de Spring) tiene que proveerlas explícitamente.
  */
 @Configuration
 class BookingAssistantConfig {
@@ -39,17 +41,15 @@ class BookingAssistantConfig {
   @Bean
   BookingAssistant bookingAssistant(
       ObjectProvider<ChatModel> chatModelProvider,
-      ObjectProvider<BookingTools> bookingToolsProvider) {
-    AiServices<BookingAssistant> assistant =
-        AiServices.builder(BookingAssistant.class)
-            .chatModel(deferredChatModel(chatModelProvider))
-            .chatMemoryProvider(
-                memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA));
-    BookingTools bookingTools = bookingToolsProvider.getIfAvailable();
-    if (bookingTools != null) {
-      assistant.tools(bookingTools);
-    }
-    return assistant.build();
+      RoomQueryTools roomQueryTools,
+      BookingQueryTools bookingQueryTools,
+      BookingTools bookingTools) {
+    return AiServices.builder(BookingAssistant.class)
+        .chatModel(deferredChatModel(chatModelProvider))
+        .chatMemoryProvider(
+            memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
+        .tools(roomQueryTools, bookingQueryTools, bookingTools)
+        .build();
   }
 
   private static ChatModel deferredChatModel(ObjectProvider<ChatModel> chatModelProvider) {

@@ -9,9 +9,9 @@ import dev.langchain4j.service.UserMessage;
  * dev.langchain4j.model.chat.ChatModel} activo, con una {@link
  * dev.langchain4j.memory.chat.ChatMemoryProvider} que aísla el historial por {@code memoryId}.
  *
- * <p>Las tools de escritura ({@link BookingTools}, E05.5) ya se registran en {@link
- * BookingAssistantConfig}; las de lectura (E05.4) y el system prompt (E05.6) quedan pendientes --
- * acá solo se conecta el modelo con la memoria de conversación y el endpoint HTTP.
+ * <p>{@link BookingAssistantConfig} le agrega las tools de consulta de E05.4 ({@link
+ * RoomQueryTools}, {@link BookingQueryTools}) y las de escritura de E05.5 ({@link BookingTools});
+ * sin system prompt todavía, eso es E05.6.
  */
 public interface BookingAssistant {
 
