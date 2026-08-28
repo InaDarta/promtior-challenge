@@ -1,10 +1,16 @@
 /**
- * Un {@link dev.langchain4j.model.chat.ChatModel} por perfil de Spring.
+ * Un {@link dev.langchain4j.model.chat.ChatModel} por perfil de Spring, y el asistente de
+ * LangChain4j que lo consume.
  *
  * <p>{@link com.promtior.booking.infrastructure.llm.ChatModelConfig} arma el bean según el perfil
  * activo (gemini, groq u ollama); nada fuera de este paquete menciona un proveedor concreto. {@link
  * com.promtior.booking.infrastructure.llm.FailoverChatModel} es el detalle del perfil {@code
  * gemini}: ante un error transitorio del proveedor primario, delega en el de respaldo en la misma
  * llamada, en vez de exigir un cambio de perfil manual. Ver ADR 0001 y ADR 0009.
+ *
+ * <p>{@link com.promtior.booking.infrastructure.llm.BookingAssistant} es el {@code AiService} que
+ * atiende la conversación; {@link com.promtior.booking.infrastructure.llm.BookingAssistantConfig}
+ * arma su proxy sobre el {@code ChatModel} activo, con una ventana de memoria acotada por sesión.
+ * Solo existe si hay un {@code ChatModel} en el contexto -- ver E05.3.
  */
 package com.promtior.booking.infrastructure.llm;
