@@ -59,6 +59,10 @@ public class BookingJpaEntity {
     this.rangeEnd = rangeEnd;
   }
 
+  UUID getId() {
+    return id;
+  }
+
   static BookingJpaEntity fromDomain(Booking booking) {
     return new BookingJpaEntity(
         UUID.randomUUID(),

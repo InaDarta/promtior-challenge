@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.promtior.booking.AbstractPostgresIntegrationTest;
 import com.promtior.booking.application.BookingRepository;
+import com.promtior.booking.application.IdentifiedBooking;
 import com.promtior.booking.domain.Booking;
 import com.promtior.booking.domain.BookingRange;
 import com.promtior.booking.domain.Room;
@@ -12,6 +13,8 @@ import com.promtior.booking.domain.TimeSlot;
 import com.promtior.booking.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,11 +70,11 @@ class BookingRepositoryTest extends AbstractPostgresIntegrationTest {
   void guardaYRecuperaUnaReservaPorPropietario() {
     Booking booking = new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE);
 
-    repository.save(booking);
-    List<Booking> encontradas = repository.findByOwner(OWNER);
+    UUID id = repository.save(booking);
+    List<IdentifiedBooking> encontradas = repository.findByOwner(OWNER);
 
     assertEquals(1, encontradas.size());
-    assertEquals(booking, encontradas.get(0));
+    assertEquals(new IdentifiedBooking(id, booking), encontradas.get(0));
   }
 
   @Test
@@ -79,5 +82,28 @@ class BookingRepositoryTest extends AbstractPostgresIntegrationTest {
     repository.save(new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE));
 
     assertTrue(repository.findByOwner(new User("user2")).isEmpty());
+  }
+
+  @Test
+  void saveDevuelveElIdConElQueLuegoSePuedeEncontrarLaReserva() {
+    Booking booking = new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE);
+
+    UUID id = repository.save(booking);
+
+    assertEquals(Optional.of(booking), repository.findById(id));
+  }
+
+  @Test
+  void findByIdDevuelveVacioSiNoExiste() {
+    assertTrue(repository.findById(UUID.randomUUID()).isEmpty());
+  }
+
+  @Test
+  void deleteByIdEliminaLaReserva() {
+    UUID id = repository.save(new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE));
+
+    repository.deleteById(id);
+
+    assertTrue(repository.findById(id).isEmpty());
   }
 }

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(gh pr create*)",
+            "command": "b=\"$(git rev-parse --abbrev-ref HEAD 2>/dev/null)\"; case \"$b\" in claude/*) printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"PR bloqueado: la rama actual usa el prefijo generico de worktree claude/... En promtior-challenge todo PR debe abrirse desde una rama con el numero de issue -- renombrala primero con git branch -m <numero>-slug (o feature/E0X.N-slug si no hay rama de GitHub para el issue), segun la convencion documentada en CLAUDE.md.\"}}' ;; esac",
+            "statusMessage": "Chequeando convención de nombre de rama antes del PR..."
+          }
+        ]
+      }
+    ]
+  }
+}

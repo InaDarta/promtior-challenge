@@ -24,7 +24,13 @@ Ver el Javadoc de cada `package-info.java` para el detalle.
 - `main` siempre desplegable. `develop` es la rama de integración.
 - Una rama y un PR por sub-issue. **Todo PR va contra `develop`, nunca contra `main`.**
 - Rama: `feature/E0X.N-slug`, o `chore/`/`docs/` según corresponda. **Se crea siempre desde
-  `develop`** (no desde `main`), salvo que se indique explícitamente lo contrario.
+  `develop`** (no desde `main`), salvo que se indique explícitamente lo contrario. En la práctica,
+  muchas ramas de sub-issue ya existen creadas desde GitHub con el patrón `<número>-slug` (botón
+  "Create a branch" del issue) — usar esa si ya existe en vez de inventar una nueva.
+- **Nunca abrir un PR desde una rama `claude/...`** (nombre genérico que asigna el harness al
+  crear un worktree sin issue asociado). Si terminás trabajando en una de estas, renombrala antes
+  del PR: `git branch -m <número>-slug` (o `feature/E0X.N-slug` si no hay rama de GitHub para ese
+  issue).
 - PR: squash merge contra `develop`, con `Closes #N`.
 - Plan completo y convenciones de título/labels/milestone en
   [doc/epics/README.md](doc/epics/README.md). Progreso en [doc/PROGRESO.md](doc/PROGRESO.md).
