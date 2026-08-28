@@ -12,5 +12,9 @@
  * atiende la conversación; {@link com.promtior.booking.infrastructure.llm.BookingAssistantConfig}
  * arma su proxy sobre el {@code ChatModel} activo, con una ventana de memoria acotada por sesión.
  * Solo existe si hay un {@code ChatModel} en el contexto -- ver E05.3.
+ *
+ * <p>{@link com.promtior.booking.infrastructure.llm.RoomQueryTools} y {@link
+ * com.promtior.booking.infrastructure.llm.BookingQueryTools} son las tools de consulta de E05.4:
+ * adaptadores finos sobre los casos de uso de {@code application}, sin lógica propia.
  */
 package com.promtior.booking.infrastructure.llm;

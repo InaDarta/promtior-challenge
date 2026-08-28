@@ -33,11 +33,15 @@ class BookingAssistantConfig {
   private static final int MAX_MESSAGES_EN_MEMORIA = 20;
 
   @Bean
-  BookingAssistant bookingAssistant(ObjectProvider<ChatModel> chatModelProvider) {
+  BookingAssistant bookingAssistant(
+      ObjectProvider<ChatModel> chatModelProvider,
+      RoomQueryTools roomQueryTools,
+      BookingQueryTools bookingQueryTools) {
     return AiServices.builder(BookingAssistant.class)
         .chatModel(deferredChatModel(chatModelProvider))
         .chatMemoryProvider(
             memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
+        .tools(roomQueryTools, bookingQueryTools)
         .build();
   }
 

@@ -9,8 +9,8 @@ import dev.langchain4j.service.UserMessage;
  * dev.langchain4j.model.chat.ChatModel} activo, con una {@link
  * dev.langchain4j.memory.chat.ChatMemoryProvider} que aísla el historial por {@code memoryId}.
  *
- * <p>Sin tools ni system prompt todavía -- eso es E05.4/E05.5 (tools) y E05.6 (prompt); acá solo se
- * conecta el modelo con la memoria de conversación y el endpoint HTTP.
+ * <p>{@link BookingAssistantConfig} le agrega las tools de consulta de E05.4 ({@link
+ * RoomQueryTools}, {@link BookingQueryTools}); sin system prompt todavía, eso es E05.6.
  */
 public interface BookingAssistant {
 
