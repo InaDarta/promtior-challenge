@@ -10,8 +10,10 @@ import dev.langchain4j.service.UserMessage;
  * dev.langchain4j.memory.chat.ChatMemoryProvider} que aísla el historial por {@code memoryId}.
  *
  * <p>{@link BookingAssistantConfig} le agrega las tools de consulta de E05.4 ({@link
- * RoomQueryTools}, {@link BookingQueryTools}) y las de escritura de E05.5 ({@link BookingTools});
- * sin system prompt todavía, eso es E05.6.
+ * RoomQueryTools}, {@link BookingQueryTools}), las de escritura de E05.5 ({@link BookingTools}), y
+ * el system prompt de E05.6 ({@link BookingSystemPrompt}): rol, fecha y hora actuales, usuario
+ * logueado, catálogo de salas y reglas de reserva en lenguaje llano. El modelo orquesta, pregunta y
+ * explica -- nunca valida, esa responsabilidad es siempre del dominio detrás de las tools.
  */
 public interface BookingAssistant {
 
