@@ -10,6 +10,7 @@ import com.promtior.booking.domain.TimeSlot;
 import com.promtior.booking.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class ListMyBookingsTest {
@@ -24,15 +25,15 @@ class ListMyBookingsTest {
   private final FakeBookingRepository repository = new FakeBookingRepository();
 
   @Test
-  void devuelveSoloLasReservasDelUsuarioAutenticado() {
+  void devuelveSoloLasReservasDelUsuarioAutenticadoJuntoConSuId() {
     Booking miReserva = new Booking("Retro de equipo", 3, YO, Room.C, RANGE);
-    repository.save(miReserva);
+    UUID id = repository.save(miReserva);
     repository.save(new Booking("1:1", 2, OTRO, Room.D, RANGE));
     ListMyBookings useCase = new ListMyBookings(repository, new FakeCurrentUserProvider(YO));
 
-    List<Booking> misReservas = useCase.execute();
+    List<IdentifiedBooking> misReservas = useCase.execute();
 
-    assertEquals(List.of(miReserva), misReservas);
+    assertEquals(List.of(new IdentifiedBooking(id, miReserva)), misReservas);
   }
 
   @Test

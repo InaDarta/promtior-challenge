@@ -16,3 +16,4 @@ correlativo.
 - [0005](0005-constraint-de-exclusion.md) — Constraint de exclusión contra la doble reserva y su traducción a `BookingError`
 - [0006](0006-spring-security-y-jwt.md) — Spring Security con sesiones sin estado y JWT vía jjwt
 - [0007](0007-resolucion-del-usuario-actual.md) — Resolución del usuario actual vía un puerto de `application`
+- [0008](0008-cancelacion-de-reservas-y-exposicion-del-id.md) — Cancelación de reservas: id expuesto solo por el puerto, 403 que no revela existencia
