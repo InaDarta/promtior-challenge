@@ -2,7 +2,7 @@ package com.promtior.booking.infrastructure.llm;
 
 import com.promtior.booking.application.GetRoomSchedule;
 import com.promtior.booking.application.ListAvailableRooms;
-import com.promtior.booking.domain.BookingRange;
+import com.promtior.booking.domain.QueryRange;
 import com.promtior.booking.domain.Room;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * Tools de consulta de salas para {@link BookingAssistant} (RT-04, RT-05): adaptadores finos sobre
  * {@link ListAvailableRooms} y {@link GetRoomSchedule}, sin lógica propia. El tipo {@link Room}
  * como parámetro restringe el esquema a A-E; la traducción de {@code start}/{@code end} a {@link
- * com.promtior.booking.domain.BookingRange} vía {@link BookingRanges} es la misma que usa {@code
+ * com.promtior.booking.domain.QueryRange} vía {@link BookingRanges} es la misma que usa {@code
  * RoomController}.
  */
 @Component
@@ -36,7 +36,7 @@ class RoomQueryTools {
       @P(value = "Capacidad mínima que debe soportar la sala", required = false)
           Integer minCapacity) {
     return listAvailableRooms.execute(
-        BookingRanges.of(LocalDateTime.parse(start), LocalDateTime.parse(end)), minCapacity);
+        BookingRanges.query(LocalDateTime.parse(start), LocalDateTime.parse(end)), minCapacity);
   }
 
   @Tool("Agenda de una sala en un rango horario: qué slots están libres y cuáles ocupados")
@@ -44,7 +44,7 @@ class RoomQueryTools {
       @P("Sala a consultar, una de A, B, C, D, E") Room room,
       @P("Inicio del rango, formato ISO-8601 (ej. 2026-08-31T10:00:00)") String start,
       @P("Fin del rango, formato ISO-8601 (ej. 2026-08-31T11:00:00)") String end) {
-    BookingRange range = BookingRanges.of(LocalDateTime.parse(start), LocalDateTime.parse(end));
+    QueryRange range = BookingRanges.query(LocalDateTime.parse(start), LocalDateTime.parse(end));
     return AvailabilitySummary.from(getRoomSchedule.execute(room, range));
   }
 }

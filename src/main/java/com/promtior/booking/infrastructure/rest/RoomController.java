@@ -33,12 +33,13 @@ class RoomController {
       @RequestParam LocalDateTime start,
       @RequestParam LocalDateTime end,
       @RequestParam(required = false) Integer minCapacity) {
-    return listAvailableRooms.execute(BookingRanges.of(start, end), minCapacity);
+    return listAvailableRooms.execute(BookingRanges.query(start, end), minCapacity);
   }
 
   @GetMapping("/{room}/schedule")
   AvailabilityResponse schedule(
       @PathVariable Room room, @RequestParam LocalDateTime start, @RequestParam LocalDateTime end) {
-    return AvailabilityResponse.from(getRoomSchedule.execute(room, BookingRanges.of(start, end)));
+    return AvailabilityResponse.from(
+        getRoomSchedule.execute(room, BookingRanges.query(start, end)));
   }
 }
