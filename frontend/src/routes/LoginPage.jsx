@@ -1,13 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
-import { Button, ErrorBanner, Panel, TextField } from '../components'
+import { Button, ErrorBanner, TextField } from '../components'
 import { useAuth } from '../context/AuthContext.jsx'
-
-const DEMO_CREDENTIALS = [
-  { username: 'User1', password: 'TechnicalChallengePromtior' },
-  { username: 'User2', password: 'TechnicalChallengePromtior' },
-]
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -37,8 +32,14 @@ export function LoginPage() {
 
   return (
     <div className="login-page">
-      <Panel title="Iniciar sesión">
-        <form onSubmit={handleSubmit}>
+      <div className="login-card">
+        <div className="login-card__badge" aria-hidden="true">
+          📅
+        </div>
+        <h1 className="login-card__title">Bienvenido de nuevo</h1>
+        <p className="login-card__subtitle">Iniciá sesión para reservar tu sala de reuniones.</p>
+
+        <form onSubmit={handleSubmit} className="login-card__form">
           <ErrorBanner message={error} />
           <TextField
             label="Usuario"
@@ -48,6 +49,7 @@ export function LoginPage() {
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             autoComplete="username"
+            placeholder="Tu usuario"
             required
           />
           <TextField
@@ -58,21 +60,14 @@ export function LoginPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
+            placeholder="Tu contraseña"
             required
           />
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
-        <p className="login-hint__title">Credenciales de la demo:</p>
-        <ul className="login-hint__list">
-          {DEMO_CREDENTIALS.map((credential) => (
-            <li key={credential.username}>
-              <code>{credential.username}</code> / <code>{credential.password}</code>
-            </li>
-          ))}
-        </ul>
-      </Panel>
+      </div>
     </div>
   )
 }
