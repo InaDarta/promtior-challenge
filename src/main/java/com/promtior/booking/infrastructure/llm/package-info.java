@@ -20,5 +20,11 @@
  * adaptadores finos sobre {@code CreateBooking}/{@code CancelBooking} que nunca reciben un usuario
  * como parámetro (ADR 0007) y traducen una violación de regla a un resultado estructurado en vez de
  * dejar escapar la excepción de dominio.
+ *
+ * <p>{@link com.promtior.booking.infrastructure.llm.TracingBookingAssistant}, {@link
+ * com.promtior.booking.infrastructure.llm.TracingChatModelListener} y {@link
+ * com.promtior.booking.infrastructure.llm.TracingToolExecutor} son la instrumentación de E07.4:
+ * spans de Langfuse por conversación, llamada al modelo y tool call, apagados por default (ver
+ * {@link com.promtior.booking.infrastructure.llm.LangfuseProperties}). Ver ADR 0011.
  */
 package com.promtior.booking.infrastructure.llm;
