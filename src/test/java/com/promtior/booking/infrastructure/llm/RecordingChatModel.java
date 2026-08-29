@@ -14,6 +14,13 @@ import java.util.Objects;
  * la respuesta. Ni {@code AiServices} ni {@link BookingAssistant} exponen esa decisión intermedia
  * del loop de tool calling; envolver el {@code ChatModel} es el único punto donde {@link
  * BookingAgentEvalRunner} puede observarla desde afuera.
+ *
+ * <p>Delega en {@link #chat(ChatRequest)}, no en {@code doChat}: {@code ChatModel.doChat} es un
+ * método default que solo tira {@code RuntimeException("Not implemented")} salvo que la
+ * implementación concreta lo pise -- las de langchain4j (p.ej. {@code GoogleAiGeminiChatModel})
+ * implementan directamente {@code chat(ChatRequest)}, sin pisar {@code doChat}. Delegar en {@code
+ * doChat} acá caía siempre en ese default, sin tocar la red ni la key -- por más real que fuera el
+ * {@link ChatModel} envuelto.
  */
 final class RecordingChatModel implements ChatModel {
 
@@ -25,8 +32,8 @@ final class RecordingChatModel implements ChatModel {
   }
 
   @Override
-  public ChatResponse doChat(ChatRequest request) {
-    ChatResponse response = delegate.doChat(request);
+  public ChatResponse chat(ChatRequest request) {
+    ChatResponse response = delegate.chat(request);
     if (response.aiMessage().hasToolExecutionRequests()) {
       llamadas.addAll(response.aiMessage().toolExecutionRequests());
     }

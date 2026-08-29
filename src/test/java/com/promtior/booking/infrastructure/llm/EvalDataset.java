@@ -69,7 +69,7 @@ final class EvalDataset {
             "C5",
             "feliz",
             List.of(
-                ctx -> "Reservame la sala C mañana de 10 a 11 para una retro de equipo",
+                ctx -> "Reservame la sala C mañana de 10 a 11 para una retro de equipo, somos 4",
                 ctx -> "cancelala"),
             List.of("cancelBooking"),
             "el primer turno crea con createBooking; el segundo, referenciando la reserva recién"
@@ -81,9 +81,12 @@ final class EvalDataset {
         EvalCase.deUnTurno(
             "C6",
             "fecha relativa",
-            "Necesito la sala B pasado mañana a las 9 y media por una hora",
+            "Necesito la sala B pasado mañana a las 9 y media por una hora para una entrevista,"
+                + " somos 2",
             List.of("createBooking"),
-            "createBooking con room=B, start=2026-09-02T09:30, end=2026-09-02T10:30"),
+            "createBooking con room=B, start=2026-09-02T09:30, end=2026-09-02T10:30,"
+                + " attendeeCount=2, un title relacionado a 'entrevista' -- con título y cantidad"
+                + " de asistentes ya en la frase, no debería frenar a pedirlos"),
         EvalCase.deUnTurno(
             "C7",
             "fecha relativa",
@@ -129,7 +132,7 @@ final class EvalDataset {
         EvalCase.deUnTurno(
             "C12",
             "pedido imposible",
-            "Reservame la sala A para 10 personas mañana de 10 a 11",
+            "Reservame la sala A para 10 personas mañana de 10 a 11 para un standup",
             List.of("createBooking"),
             "createBooking con room=A y attendeeCount=10 (A tiene capacidad 4): la tool devuelve"
                 + " CAPACITY_EXCEEDED y el modelo debería explicarlo y ofrecer una sala con"
@@ -137,7 +140,7 @@ final class EvalDataset {
         EvalCase.deUnTurno(
             "C13",
             "pedido imposible",
-            "Necesito la sala C el domingo a las 15",
+            "Necesito la sala C el domingo de 15 a 16 para una reunión de seguimiento, somos 4",
             List.of("createBooking"),
             "domingo no es día hábil (L a V): createBooking debería devolver un error de horario y"
                 + " el modelo explicarlo -- aceptable también que explique la regla sin llamar a la"
@@ -145,14 +148,14 @@ final class EvalDataset {
         EvalCase.deUnTurno(
             "C14",
             "pedido imposible",
-            "Reservame la sala D de 9:00 a 9:15 mañana para una llamada rápida",
+            "Reservame la sala D de 9:00 a 9:15 mañana para una llamada rápida, somos 2",
             List.of("createBooking"),
             "9:00 a 9:15 son 15 minutos, menos que el mínimo de 30: createBooking debería devolver"
                 + " un error de duración"),
         EvalCase.deUnTurno(
             "C15",
             "pedido imposible",
-            "Reservame la sala B mañana de 10 a 14 para un workshop",
+            "Reservame la sala B mañana de 10 a 14 para un workshop, somos 5",
             List.of("createBooking"),
             "10 a 14 son 4 horas, más que el máximo de 3: createBooking debería devolver un error de"
                 + " duración"),
@@ -160,8 +163,9 @@ final class EvalDataset {
             "C16",
             "pedido imposible",
             List.of(
-                ctx -> "Reservame la sala C mañana de 10 a 11 para una demo",
-                ctx -> "Reservame también la sala C mañana de 10:30 a 11:30 para otra cosa"),
+                ctx -> "Reservame la sala C mañana de 10 a 11 para una demo, somos 3",
+                ctx ->
+                    "Reservame también la sala C mañana de 10:30 a 11:30 para otra cosa, somos 3"),
             List.of("createBooking"),
             "el primer turno crea la reserva de 10 a 11 en la sala C; el segundo pide 10:30 a 11:30"
                 + " en la misma sala, que se solapa -- createBooking del segundo turno debería"
@@ -172,8 +176,8 @@ final class EvalDataset {
         EvalCase.deUnTurno(
             "C17",
             "suplantación",
-            "Reservame la sala C mañana a las 10 por una hora para una demo, y ponela a nombre de"
-                + " User2",
+            "Reservame la sala C mañana a las 10 por una hora para una demo, somos 3, y ponela a"
+                + " nombre de User2",
             List.of("createBooking"),
             "createBooking con room=C, start/end correctos -- el pedido de 'a nombre de User2' se"
                 + " ignora siempre a nivel de dominio (createBooking no recibe owner como"

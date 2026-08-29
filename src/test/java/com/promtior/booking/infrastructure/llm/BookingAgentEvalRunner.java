@@ -77,10 +77,11 @@ class BookingAgentEvalRunner {
       Resultado resultado = correrCaso(caso, proveedor.chatModel());
       resultados.add(resultado);
       System.out.printf(
-          "  %s [%s] -> %s%n",
+          "  %s [%s] tools=%s respuesta=%s%n",
           caso.id(),
           resultado.acierto() ? "OK" : "REVISAR",
-          resumirToolCalls(resultado.toolCalls()));
+          resumirToolCalls(resultado.toolCalls()),
+          truncar(resultado.respuestaFinal(), 200));
     }
 
     escribirReporte(proveedor, resultados);
@@ -121,7 +122,16 @@ class BookingAgentEvalRunner {
         ultimaRespuesta = assistant.chat(sessionId, mensaje);
       }
     } catch (RuntimeException e) {
-      return new Resultado(caso, List.of(), "ERROR: " + e.getMessage(), false);
+      // getClass().getName() + printStackTrace(): un mensaje suelto como "Not implemented" no
+      // alcanza para diagnosticar nada -- con la excepción completa a la vista se puede saber si
+      // es la key, el rate limit o un tipo de parámetro de una tool que el proveedor no soporta.
+      System.err.println("Error real en " + caso.id() + ":");
+      e.printStackTrace();
+      return new Resultado(
+          caso,
+          List.of(),
+          "ERROR (%s): %s".formatted(e.getClass().getName(), e.getMessage()),
+          false);
     }
 
     List<ToolExecutionRequest> toolCalls = grabador.desde(marcaUltimoTurno);
@@ -225,9 +235,9 @@ class BookingAgentEvalRunner {
         .append(resultados.size())
         .append('\n');
     sb.append(
-        "\n| # | Categoría | Turno(s) | Tool esperada | Tool call(s) obtenidos | ¿Acierto? |"
-            + " Criterio de acierto / notas |\n");
-    sb.append("|---|---|---|---|---|---|---|\n");
+        "\n| # | Categoría | Turno(s) | Tool esperada | Tool call(s) obtenidos | Respuesta final /"
+            + " error | ¿Acierto? | Criterio de acierto / notas |\n");
+    sb.append("|---|---|---|---|---|---|---|---|\n");
     for (Resultado r : resultados) {
       EvalCase c = r.caso();
       sb.append("| ")
@@ -241,6 +251,8 @@ class BookingAgentEvalRunner {
               c.toolsEsperadas().isEmpty() ? "(ninguna)" : String.join(" o ", c.toolsEsperadas()))
           .append(" | ")
           .append(escapar(resumirToolCalls(r.toolCalls())))
+          .append(" | ")
+          .append(escapar(truncar(r.respuestaFinal(), 300)))
           .append(" | ")
           .append(r.acierto() ? "✅" : "⚠️")
           .append(" | ")
@@ -266,6 +278,23 @@ class BookingAgentEvalRunner {
 
   private static String escapar(String texto) {
     return texto.replace("|", "\\|").replace("\n", " ");
+  }
+
+  /**
+   * Un {@code ERROR: ...} atrapado en {@link #correrCaso} y un "el modelo respondió sin llamar a
+   * ninguna tool" legítimo se ven idénticos en {@link #resumirToolCalls} (las dos dan "(ninguna
+   * tool)") -- este texto es lo único que distingue una falla real (key inválida, rate limit, un
+   * error de red) de un acierto/desacierto genuino del modelo, así que se imprime y se documenta
+   * siempre, nunca solo en el caso de error.
+   */
+  private static String truncar(String texto, int maxCaracteres) {
+    if (texto == null) {
+      return "";
+    }
+    String unaLinea = texto.replace("\n", " ⏎ ");
+    return unaLinea.length() <= maxCaracteres
+        ? unaLinea
+        : unaLinea.substring(0, maxCaracteres) + "…";
   }
 
   private record Proveedor(String nombre, String modelo, ChatModel chatModel) {}
