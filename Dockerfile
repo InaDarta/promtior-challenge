@@ -16,10 +16,10 @@ WORKDIR /app
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 RUN sed -i 's/\r$//' mvnw
-RUN --mount=type=cache,target=/root/.m2 ./mvnw dependency:go-offline -B
+RUN --mount=type=cache,id=m2,target=/root/.m2 ./mvnw dependency:go-offline -B
 COPY src/ src/
 COPY --from=frontend-build /frontend/dist/ src/main/resources/static/
-RUN --mount=type=cache,target=/root/.m2 ./mvnw package -B -DskipTests
+RUN --mount=type=cache,id=m2,target=/root/.m2 ./mvnw package -B -DskipTests
 
 # --- Stage 3: runtime (JRE only, non-root) ---
 FROM eclipse-temurin:25-jre AS runtime
