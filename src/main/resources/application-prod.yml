@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+# Railway inyecta el puerto a exponer en PORT, no en SERVER_PORT.
+server:
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    # Sin default: el de application.yml es solo para dev/tests, nunca para un despliegue real.
+    secret: ${JWT_SECRET}
