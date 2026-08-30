@@ -19,3 +19,4 @@ correlativo.
 - [0008](0008-cancelacion-de-reservas-y-exposicion-del-id.md) — Cancelación de reservas: id expuesto solo por el puerto, 403 que no revela existencia
 - [0009](0009-limites-del-tier-gratuito-de-gemini.md) — Límites del tier gratuito de Gemini y confirmación del proveedor primario
 - [0010](0010-streaming-del-chat.md) — Streaming del chat: errores in-band, `fetch` en vez de `EventSource`, failover acotado
+- [0011](0011-trazas-de-llm-y-tool-calls-con-langfuse.md) — Trazas de LLM y tool calls con Langfuse vía OpenTelemetry

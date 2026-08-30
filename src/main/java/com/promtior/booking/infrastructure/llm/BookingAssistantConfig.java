@@ -1,5 +1,8 @@
 package com.promtior.booking.infrastructure.llm;
 
+import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.agent.tool.ToolSpecifications;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -7,7 +10,14 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.DefaultToolExecutor;
+import dev.langchain4j.service.tool.ToolExecutor;
+import io.opentelemetry.api.trace.Tracer;
+import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,8 +40,15 @@ import org.springframework.context.annotation.Configuration;
  * como parámetro obligatorio, igual que cualquier otro bean de Spring: a diferencia del {@code
  * ChatModel}, no hay ningún escenario en el que no existan en producción, así que un test que arma
  * este bean directamente (sin el resto del contexto de Spring) tiene que proveerlos explícitamente.
+ *
+ * <p>Las tools se registran vía {@link #tracedTools} en vez de {@code .tools(Object...)}: arma el
+ * mismo {@code Map<ToolSpecification, ToolExecutor>} que LangChain4j construiría solo, pero
+ * envolviendo cada {@link ToolExecutor} con {@link TracingToolExecutor} (E07.4, ADR 0011) sin tocar
+ * las clases de tools. El {@link BookingAssistant} resultante se envuelve además con {@link
+ * TracingBookingAssistant} para el span raíz de cada turno.
  */
 @Configuration
+@EnableConfigurationProperties(LangfuseProperties.class)
 class BookingAssistantConfig {
 
   /**
@@ -47,15 +64,52 @@ class BookingAssistantConfig {
       BookingSystemPrompt bookingSystemPrompt,
       RoomQueryTools roomQueryTools,
       BookingQueryTools bookingQueryTools,
-      BookingTools bookingTools) {
-    return AiServices.builder(BookingAssistant.class)
-        .chatModel(deferredChatModel(chatModelProvider))
-        .streamingChatModel(deferredStreamingChatModel(streamingChatModelProvider))
-        .chatMemoryProvider(
-            memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
-        .systemMessageProvider(bookingSystemPrompt)
-        .tools(roomQueryTools, bookingQueryTools, bookingTools)
-        .build();
+      BookingTools bookingTools,
+      Tracer tracer,
+      LangfuseProperties langfuseProperties,
+      ConversationTraceRegistry traceRegistry) {
+    Map<ToolSpecification, ToolExecutor> tools = new LinkedHashMap<>();
+    tools.putAll(tracedTools(roomQueryTools, tracer, langfuseProperties, traceRegistry));
+    tools.putAll(tracedTools(bookingQueryTools, tracer, langfuseProperties, traceRegistry));
+    tools.putAll(tracedTools(bookingTools, tracer, langfuseProperties, traceRegistry));
+
+    BookingAssistant assistant =
+        AiServices.builder(BookingAssistant.class)
+            .chatModel(deferredChatModel(chatModelProvider))
+            .streamingChatModel(deferredStreamingChatModel(streamingChatModelProvider))
+            .chatMemoryProvider(
+                memoryId -> MessageWindowChatMemory.withMaxMessages(MAX_MESSAGES_EN_MEMORIA))
+            .systemMessageProvider(bookingSystemPrompt)
+            .tools(tools)
+            .build();
+    return new TracingBookingAssistant(assistant, tracer, langfuseProperties, traceRegistry);
+  }
+
+  private static Map<ToolSpecification, ToolExecutor> tracedTools(
+      Object toolObject,
+      Tracer tracer,
+      LangfuseProperties langfuseProperties,
+      ConversationTraceRegistry traceRegistry) {
+    Map<ToolSpecification, ToolExecutor> tools = new LinkedHashMap<>();
+    for (ToolSpecification specification : ToolSpecifications.toolSpecificationsFrom(toolObject)) {
+      Method method = toolMethod(toolObject, specification.name());
+      ToolExecutor executor = new DefaultToolExecutor(toolObject, method);
+      tools.put(
+          specification,
+          new TracingToolExecutor(
+              executor, specification.name(), tracer, langfuseProperties, traceRegistry));
+    }
+    return tools;
+  }
+
+  private static Method toolMethod(Object toolObject, String toolName) {
+    for (Method method : toolObject.getClass().getDeclaredMethods()) {
+      if (method.isAnnotationPresent(Tool.class) && method.getName().equals(toolName)) {
+        return method;
+      }
+    }
+    throw new IllegalStateException(
+        "No se encontró el método @Tool %s en %s".formatted(toolName, toolObject.getClass()));
   }
 
   private static ChatModel deferredChatModel(ObjectProvider<ChatModel> chatModelProvider) {

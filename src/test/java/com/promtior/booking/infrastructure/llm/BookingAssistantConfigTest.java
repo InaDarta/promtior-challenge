@@ -16,6 +16,8 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import java.time.Clock;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +54,8 @@ class BookingAssistantConfigTest {
                       Clock.systemDefaultZone(), new FakeCurrentUserProvider(new User("nadie"))))
           .withBean(RoomQueryTools.class)
           .withBean(BookingQueryTools.class)
+          .withBean(Tracer.class, () -> OpenTelemetry.noop().getTracer("test"))
+          .withBean(ConversationTraceRegistry.class, ConversationTraceRegistry::new)
           .withBean(
               CreateBooking.class,
               () ->

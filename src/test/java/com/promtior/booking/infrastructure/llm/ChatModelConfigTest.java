@@ -4,24 +4,35 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import io.opentelemetry.api.OpenTelemetry;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /**
  * Prueba el criterio de aceptación de E05.2: cambiar de proveedor es cambiar el perfil activo, y el
- * perfil {@code gemini} incluye el failover automático a Groq (ADR 0009).
+ * perfil {@code gemini} incluye el failover automático a Groq (ADR 0009). {@link
+ * TracingChatModelListener} se provee con tracing apagado (E07.4): estos tests no ejercitan ninguna
+ * llamada real al modelo, así que no hay nada que trazar.
  */
 class ChatModelConfigTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withUserConfiguration(ChatModelConfig.class)
+          .withBean(
+              TracingChatModelListener.class,
+              () ->
+                  new TracingChatModelListener(
+                      OpenTelemetry.noop().getTracer("test"),
+                      new LangfuseProperties(false),
+                      new ObjectMapper()))
           .withPropertyValues(
               "app.llm.gemini.api-key=gemini-key",
               "app.llm.gemini.model-name=gemini-3.7-flash",

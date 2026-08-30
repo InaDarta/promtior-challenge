@@ -19,6 +19,8 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -155,6 +157,8 @@ class BookingAssistantToolRoutingTest {
             () -> new BookingSystemPrompt(Clock.systemDefaultZone(), currentUser))
         .withBean(RoomQueryTools.class)
         .withBean(BookingQueryTools.class)
+        .withBean(Tracer.class, () -> OpenTelemetry.noop().getTracer("test"))
+        .withBean(ConversationTraceRegistry.class, ConversationTraceRegistry::new)
         .withBean(
             CreateBooking.class,
             () -> new CreateBooking(repository, currentUser, Clock.systemDefaultZone()))
