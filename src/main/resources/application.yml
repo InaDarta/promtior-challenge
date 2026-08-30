@@ -35,6 +35,12 @@ app:
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       model-name: ${OLLAMA_MODEL_NAME:llama3.1}
+  observability:
+    langfuse:
+      # Apagado por default: sin esto, cada llamada al modelo y cada tool call arma spans que nadie
+      # exporta. Ver ADR 0011. LANGFUSE_OTEL_AUTH_HEADER es "Basic <base64 de pk:sk>", ya calculado
+      # (Langfuse lo pide así en sus propios docs) -- nunca las keys sueltas acá.
+      enabled: ${LANGFUSE_TRACING_ENABLED:false}
 
 management:
   endpoints:
@@ -45,3 +51,16 @@ management:
     health:
       probes:
         enabled: true
+  tracing:
+    sampling:
+      # Todas las conversaciones, no una muestra: el volumen de esta app no lo justifica y E07.4
+      # pide poder ver cualquier conversación completa como traza.
+      probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: ${LANGFUSE_TRACING_ENABLED:false}
+      endpoint: ${LANGFUSE_OTEL_ENDPOINT:https://cloud.langfuse.com/api/public/otel/v1/traces}
+      headers:
+        Authorization: ${LANGFUSE_OTEL_AUTH_HEADER:}
+        x-langfuse-ingestion-version: "4"
