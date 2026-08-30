@@ -7,6 +7,9 @@ spring:
 # Railway inyecta el puerto a exponer en PORT, no en SERVER_PORT.
 server:
   port: ${PORT:8080}
+  error:
+    # TEMPORAL: para diagnosticar el 500 de /api/chat en el deploy real. Revertir después.
+    include-message: always
 
 app:
   jwt:
