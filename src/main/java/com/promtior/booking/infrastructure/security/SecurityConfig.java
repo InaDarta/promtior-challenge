@@ -42,6 +42,10 @@ class SecurityConfig {
                     .permitAll()
                     .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                     .permitAll()
+                    // El build de Vite sirve el SPA desde "/" y "/assets/**", no desde las
+                    // ubicaciones "comunes" (css/js/images) que cubre atCommonLocations().
+                    .requestMatchers(HttpMethod.GET, "/", "/index.html", "/assets/**")
+                    .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
                     .anyRequest()
