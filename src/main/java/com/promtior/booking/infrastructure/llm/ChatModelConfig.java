@@ -102,10 +102,11 @@ class ChatModelConfig {
 
   private static StreamingChatModel buildGeminiStreaming(
       LlmProperties.Gemini gemini, TracingChatModelListener tracing) {
+    // GoogleAiGeminiStreamingChatModel no tiene maxRetries desde langchain4j 1.2.0: no tiene
+    // sentido reintentar una respuesta que ya empezó a emitir tokens.
     return GoogleAiGeminiStreamingChatModel.builder()
         .apiKey(gemini.apiKey())
         .modelName(gemini.modelName())
-        .maxRetries(gemini.maxRetries())
         .listeners(List.of(tracing))
         .build();
   }
