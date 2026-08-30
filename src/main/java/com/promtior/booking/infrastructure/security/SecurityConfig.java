@@ -48,6 +48,12 @@ class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
+                    // El redespacho a /error de un endpoint autenticado que tira una excepción no
+                    // vuelve a pasar por JwtAuthenticationFilter -- sin este permitAll, ese
+                    // redespacho lo bloquea "anyRequest().authenticated()" y el cliente ve un 401
+                    // en vez del status real del error (500, 400, etc.).
+                    .requestMatchers("/error")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .exceptionHandling(
