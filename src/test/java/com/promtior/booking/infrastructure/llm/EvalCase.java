@@ -8,7 +8,7 @@ import java.util.function.Function;
 /**
  * Un caso de la suite de evaluación en vivo de E07.3: una conversación de uno o más turnos contra
  * un {@link BookingAssistant} con un {@link dev.langchain4j.model.chat.ChatModel} real, con la tool
- * que se espera que dispare el último turno y el criterio, en criollo, con el que {@link
+ * que se espera que dispare el último turno y el criterio, en lenguaje llano, con el que {@link
  * BookingAgentEvalRunner} documenta si acertó.
  *
  * <p>{@code toolsEsperadas} vacía significa que el turno final no debería disparar ninguna tool (el
