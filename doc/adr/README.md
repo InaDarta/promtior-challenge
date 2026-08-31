@@ -21,3 +21,6 @@ correlativo.
 - [0010](0010-streaming-del-chat.md) — Streaming del chat: errores in-band, `fetch` en vez de `EventSource`, failover acotado
 - [0011](0011-trazas-de-llm-y-tool-calls-con-langfuse.md) — Trazas de LLM y tool calls con Langfuse vía OpenTelemetry
 - [0012](0012-health-check-y-rate-limit-en-el-chat.md) — Health check público y rate limit en memoria en /api/chat
+- [0013](0013-proveedor-de-modelo.md) — Proveedor de modelo: Gemini primario, Groq de respaldo
+- [0014](0014-capacidades-de-las-salas.md) — Capacidades de las salas: escalera fija en un enum cerrado
+- [0015](0015-reglas-en-el-dominio-no-en-el-prompt.md) — Las reglas de negocio viven en el dominio, no en el prompt
