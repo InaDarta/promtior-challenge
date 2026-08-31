@@ -1,5 +1,6 @@
 package com.promtior.booking.infrastructure.llm;
 
+import com.promtior.booking.infrastructure.llm.tracing.TracingChatModelListener;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
@@ -18,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * StubChatModel} no pasa por ningún builder de proveedor, así que sin este wrapper {@link
  * TracingChatModelListener} nunca se ejercitaría en un test determinista.
  */
-record ListenerInvokingChatModel(ChatModel delegate, ChatModelListener listener)
+public record ListenerInvokingChatModel(ChatModel delegate, ChatModelListener listener)
     implements ChatModel {
 
   @Override

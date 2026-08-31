@@ -11,6 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.promtior.booking.AbstractPostgresIntegrationTest;
 import com.promtior.booking.domain.Room;
+import com.promtior.booking.infrastructure.rest.controller.BookingControllerTest;
+import com.promtior.booking.infrastructure.rest.dto.CreateBookingRequest;
+import com.promtior.booking.infrastructure.rest.dto.LoginRequest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

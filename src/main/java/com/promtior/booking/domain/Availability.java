@@ -22,7 +22,7 @@ public record Availability(Room room, List<TimeSlot> freeSlots, List<TimeSlot> o
    * Calcula la disponibilidad de {@code room} en {@code range}, contra las reservas existentes que
    * ocupan esa sala. Reservas en otras salas no afectan el resultado.
    */
-  public static Availability of(Room room, BookingRange range, List<Booking> existingBookings) {
+  public static Availability of(Room room, QueryRange range, List<Booking> existingBookings) {
     Objects.requireNonNull(room, "room");
     Objects.requireNonNull(range, "range");
     Objects.requireNonNull(existingBookings, "existingBookings");

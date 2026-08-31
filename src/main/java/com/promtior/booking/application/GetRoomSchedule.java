@@ -1,7 +1,7 @@
 package com.promtior.booking.application;
 
 import com.promtior.booking.domain.Availability;
-import com.promtior.booking.domain.BookingRange;
+import com.promtior.booking.domain.QueryRange;
 import com.promtior.booking.domain.Room;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class GetRoomSchedule {
     this.bookingRepository = Objects.requireNonNull(bookingRepository, "bookingRepository");
   }
 
-  public Availability execute(Room room, BookingRange range) {
+  public Availability execute(Room room, QueryRange range) {
     Objects.requireNonNull(room, "room");
     Objects.requireNonNull(range, "range");
     return Availability.of(room, range, bookingRepository.findByRoom(room));
