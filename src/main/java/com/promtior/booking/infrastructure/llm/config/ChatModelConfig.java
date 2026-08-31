@@ -86,10 +86,15 @@ public class ChatModelConfig {
 
   private static ChatModel buildGemini(
       LlmProperties.Gemini gemini, TracingChatModelListener tracing) {
+    // gemini-3.7-flash devuelve un thoughtSignature obligatorio en cada tool call; sin
+    // sendThinking/returnThinking, LangChain4j no lo reenvía y Gemini rechaza el turno siguiente
+    // con 400 INVALID_ARGUMENT ("Function call is missing a thought_signature").
     return GoogleAiGeminiChatModel.builder()
         .apiKey(gemini.apiKey())
         .modelName(gemini.modelName())
         .maxRetries(gemini.maxRetries())
+        .sendThinking(true)
+        .returnThinking(true)
         .listeners(List.of(tracing))
         .build();
   }
@@ -105,9 +110,12 @@ public class ChatModelConfig {
 
   private static StreamingChatModel buildGeminiStreaming(
       LlmProperties.Gemini gemini, TracingChatModelListener tracing) {
+    // Mismo motivo que en buildGemini: sin esto, el turno posterior a un tool call falla con 400.
     return GoogleAiGeminiStreamingChatModel.builder()
         .apiKey(gemini.apiKey())
         .modelName(gemini.modelName())
+        .sendThinking(true)
+        .returnThinking(true)
         .listeners(List.of(tracing))
         .build();
   }
