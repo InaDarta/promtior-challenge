@@ -49,8 +49,6 @@ class BookingTools {
       @P("Inicio de la reserva, formato ISO-8601 (ej: 2026-08-31T10:00:00)") String start,
       @P("Fin de la reserva, formato ISO-8601 (ej: 2026-08-31T11:00:00)") String end) {
     try {
-      // String, no LocalDateTime: DefaultToolExecutor.coerceArgument de langchain4j 1.0.0 no sabe
-      // convertir el string JSON del tool call a LocalDateTime y falla con cualquier ISO-8601 real.
       BookingRange range = BookingRanges.of(LocalDateTime.parse(start), LocalDateTime.parse(end));
       UUID bookingId = createBookingUseCase.execute(title, attendeeCount, room, range);
       return CreateBookingResult.ok(bookingId);

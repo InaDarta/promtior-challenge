@@ -35,8 +35,6 @@ class RoomQueryTools {
       @P("Fin del rango, formato ISO-8601 (ej. 2026-08-31T11:00:00)") String end,
       @P(value = "Capacidad mínima que debe soportar la sala", required = false)
           Integer minCapacity) {
-    // String, no LocalDateTime: langchain4j 1.0.0 no coerciona el string JSON del tool call a
-    // LocalDateTime (DefaultToolExecutor.coerceArgument falla con cualquier ISO-8601 real).
     return listAvailableRooms.execute(
         BookingRanges.of(LocalDateTime.parse(start), LocalDateTime.parse(end)), minCapacity);
   }

@@ -33,12 +33,10 @@ class AvailabilityTest {
 
   @Test
   void unaReservaParcialEnElMedioDelRangoOcupaSoloEsosSlots() {
-    // Rango consultado: 10:00 a 12:00 (4 slots de 30 min).
     BookingRange rangoConsultado =
         BookingRange.between(
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 11, 30)));
-    // Reserva existente: 10:30 a 11:00, en el medio del rango consultado.
     BookingRange rangoReservado =
         BookingRange.between(
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 30)),
