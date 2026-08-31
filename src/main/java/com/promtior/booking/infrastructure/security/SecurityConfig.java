@@ -44,7 +44,11 @@ class SecurityConfig {
                     .permitAll()
                     // El build de Vite sirve el SPA desde "/" y "/assets/**", no desde las
                     // ubicaciones "comunes" (css/js/images) que cubre atCommonLocations().
-                    .requestMatchers(HttpMethod.GET, "/", "/index.html", "/assets/**")
+                    // "/login" y "/chat" son rutas del router de React (deep links): sin
+                    // permitirlas, un refresh del navegador en esas rutas nunca llega a ejecutar
+                    // el JS de React y cae en "anyRequest().authenticated()".
+                    .requestMatchers(
+                        HttpMethod.GET, "/", "/index.html", "/assets/**", "/login", "/chat")
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
