@@ -114,13 +114,20 @@ class BookingAssistantConfig {
 
   private static ChatModel deferredChatModel(ObjectProvider<ChatModel> chatModelProvider) {
     return new ChatModel() {
+      // Overridea chat(), no doChat(): doChat() es el hook interno de cada proveedor, que espera
+      // recibir sus propios ChatRequestParameters (ej. OpenAiChatRequestParameters para Groq) ya
+      // mergeados por defaultRequestParameters().overrideWith(...) dentro de chat(). Overrideando
+      // doChat() acá, ese merge corría contra el default vacío de ESTE wrapper en vez del real del
+      // modelo -- AiServices arma parameters con tools vía ChatRequestParameters genérico, y ese
+      // genérico llegaba tal cual a OpenAiChatModel.doChat(), que lo castea a
+      // OpenAiChatRequestParameters sin chequear el tipo. Ver issue #106.
       @Override
-      public ChatResponse doChat(ChatRequest request) {
+      public ChatResponse chat(ChatRequest request) {
         ChatModel chatModel = chatModelProvider.getIfAvailable();
         if (chatModel == null) {
           throw new LlmNotConfiguredException();
         }
-        return chatModel.doChat(request);
+        return chatModel.chat(request);
       }
     };
   }
@@ -135,14 +142,16 @@ class BookingAssistantConfig {
   private static StreamingChatModel deferredStreamingChatModel(
       ObjectProvider<StreamingChatModel> streamingChatModelProvider) {
     return new StreamingChatModel() {
+      // Mismo motivo que en deferredChatModel: overridear chat(), no doChat(), para que el merge
+      // de defaultRequestParameters() corra contra el default real del proveedor.
       @Override
-      public void doChat(ChatRequest request, StreamingChatResponseHandler handler) {
+      public void chat(ChatRequest request, StreamingChatResponseHandler handler) {
         StreamingChatModel streamingChatModel = streamingChatModelProvider.getIfAvailable();
         if (streamingChatModel == null) {
           handler.onError(new LlmNotConfiguredException());
           return;
         }
-        streamingChatModel.doChat(request, handler);
+        streamingChatModel.chat(request, handler);
       }
     };
   }
