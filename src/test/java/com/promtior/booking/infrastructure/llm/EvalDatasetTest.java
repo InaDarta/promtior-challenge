@@ -61,7 +61,7 @@ class EvalDatasetTest {
     EvalContext contextoVacio = new EvalContext();
     for (EvalCase caso : EvalDataset.casos()) {
       if (caso.id().equals("C18")) {
-        continue; // depende del id que su propio setup siembra en tiempo de ejecución
+        continue;
       }
       for (var turno : caso.turnos()) {
         String frase = turno.apply(contextoVacio);

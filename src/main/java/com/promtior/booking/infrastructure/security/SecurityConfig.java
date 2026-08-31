@@ -1,6 +1,8 @@
 package com.promtior.booking.infrastructure.security;
 
+import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -17,9 +19,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Sesiones sin estado (el JWT es la sesión): {@code /api/auth/login}, los estáticos y la
- * documentación de OpenAPI/Swagger UI son públicos, cualquier otro endpoint exige el token. Ver ADR
- * 0006.
+ * Sesiones sin estado (el JWT es la sesión): {@code /api/auth/login}, los estáticos, la
+ * documentación de OpenAPI/Swagger UI y {@code /actuator/health} son públicos (Railway y cualquier
+ * monitor externo necesitan pegarle sin token), cualquier otro endpoint exige el token. Ver ADR
+ * 0006 y ADR 0012.
  */
 @Configuration
 @EnableWebSecurity
@@ -27,9 +30,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final Filter chatRateLimitFilter;
 
-  SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+  SecurityConfig(
+      JwtAuthenticationFilter jwtAuthenticationFilter,
+      @Qualifier("chatRateLimitFilter") Filter chatRateLimitFilter) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    this.chatRateLimitFilter = chatRateLimitFilter;
   }
 
   @Bean
@@ -42,20 +49,13 @@ class SecurityConfig {
                     .permitAll()
                     .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                     .permitAll()
-                    // El build de Vite sirve el SPA desde "/" y "/assets/**", no desde las
-                    // ubicaciones "comunes" (css/js/images) que cubre atCommonLocations().
-                    // "/login" y "/chat" son rutas del router de React (deep links): sin
-                    // permitirlas, un refresh del navegador en esas rutas nunca llega a ejecutar
-                    // el JS de React y cae en "anyRequest().authenticated()".
                     .requestMatchers(
                         HttpMethod.GET, "/", "/index.html", "/assets/**", "/login", "/chat")
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
-                    // El redespacho a /error de un endpoint autenticado que tira una excepción no
-                    // vuelve a pasar por JwtAuthenticationFilter -- sin este permitAll, ese
-                    // redespacho lo bloquea "anyRequest().authenticated()" y el cliente ve un 401
-                    // en vez del status real del error (500, 400, etc.).
+                    .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**")
+                    .permitAll()
                     .requestMatchers("/error")
                     .permitAll()
                     .anyRequest()
@@ -65,7 +65,8 @@ class SecurityConfig {
                 ex.authenticationEntryPoint(
                     (request, response, authException) ->
                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(chatRateLimitFilter, JwtAuthenticationFilter.class);
     return http.build();
   }
 

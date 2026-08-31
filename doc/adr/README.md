@@ -20,3 +20,4 @@ correlativo.
 - [0009](0009-limites-del-tier-gratuito-de-gemini.md) — Límites del tier gratuito de Gemini y confirmación del proveedor primario
 - [0010](0010-streaming-del-chat.md) — Streaming del chat: errores in-band, `fetch` en vez de `EventSource`, failover acotado
 - [0011](0011-trazas-de-llm-y-tool-calls-con-langfuse.md) — Trazas de LLM y tool calls con Langfuse vía OpenTelemetry
+- [0012](0012-health-check-y-rate-limit-en-el-chat.md) — Health check público y rate limit en memoria en /api/chat
