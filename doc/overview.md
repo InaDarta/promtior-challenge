@@ -1,30 +1,42 @@
 # Overview
 
 ## Cómo se encaró el problema
-- El enunciado deja lenguaje y framework libres. Elegí Java 25 + Spring Boot + LangChain4j en vez
-  del ecosistema Python donde nació LangChain, para que una reserva inválida sea **irrepresentable**
-  en el tipo (`record` + `sealed interface`), no solo rechazada en runtime ([ADR 0001](adr/0001-stack.md)).
-- Arquitectura hexagonal estricta bajo `com.promtior.booking`: `domain` (Java puro, sin Spring ni
-  JPA, se prueba sin levantar contexto), `application` (casos de uso y puertos, depende de `domain`
-  y nunca al revés), `infrastructure` (único lugar con configuración de framework: REST,
-  persistencia, seguridad JWT, capa de LLM).
-- Gemini como proveedor primario por su tool calling, con Groq de respaldo automático — el proveedor
-  que el propio enunciado sugiere — y Ollama para desarrollo offline, los tres detrás del mismo
-  `ChatModel` ([ADR 0013](adr/0013-proveedor-de-modelo.md), [ADR 0009](adr/0009-limites-del-tier-gratuito-de-gemini.md)).
-- Trabajé con issue-driven development desde el día uno: diez épicas y 43 sub-issues del tamaño de
-  un PR cada uno, con objetivo, alcance y criterio de aceptación escritos antes de la primera línea
-  de código ([`doc/epics/`](epics/)). El recorrido completo de una pregunta a una respuesta está
-  dibujado en el [diagrama de componentes](diagrams/component-diagram.png).
+- Antes de tocar código, bajé a tierra los requisitos reales del challenge: la lógica de negocio de
+  las reglas de reserva (RN-01 a RN-08, hoy la fuente de verdad de `domain`).
+- Elegí el stack en base a experiencia real, no a la opción "de manual". **Java 25** para el
+  backend porque es el lenguaje con el que trabajo en el día a día — me daba la confianza para
+  levantar un backend sólido, con capas bien separadas (endpoint, controller, repositorio, lógica de
+  negocio) y *single responsibility*, en vez de arrancar de cero en un lenguaje nuevo bajo la presión
+  de siete días.
+- **PostgreSQL** porque ya lo usé en prácticas de la facultad y cubría exactamente lo que
+  necesitaba — en particular, el constraint de exclusión contra el solapamiento de reservas
+  ([ADR 0005](adr/0005-constraint-de-exclusion.md)).
+- **React** para el frontend porque es la tecnología con la que trabaja Promtior, y lo bastante
+  parecida a Vue (mi experiencia previa) como para animarme a resolver el acotado front que pedía el
+  challenge sin perder tiempo aprendiendo un framework nuevo de cero.
+- **Gemini** como proveedor del agente porque ya lo había integrado antes en un proyecto de la
+  facultad — esa experiencia previa bajó el riesgo justo en la parte más nueva del challenge: tool
+  calling con un LLM real.
+- Arquitectura hexagonal estricta bajo `com.promtior.booking` una vez elegido el stack: `domain`
+  (Java puro, sin Spring ni JPA, se prueba sin levantar contexto), `application` (casos de uso y
+  puertos, depende de `domain` y nunca al revés), `infrastructure` (único lugar con configuración de
+  framework: REST, persistencia, seguridad JWT, capa de LLM). El recorrido completo de una pregunta a
+  una respuesta está dibujado en el [diagrama de componentes](diagrams/component-diagram.png).
 
 ## Metodología (breve)
-- Camino crítico marcado desde el arranque (`E00→E01→E02→E03→E04→E05→E08→E09`), con `E06`
-  (interfaz) y `E07` (testing/evaluación) señaladas de antemano como recortables si el tiempo
-  apretaba — al final no hizo falta cortar nada de eso.
-- Desarrollo generativo: delego cada sub-issue en Claude Code, que trabaja en un worktree de git
-  aislado por rama siguiendo las reglas fijadas en `CLAUDE.md` (arquitectura hexagonal, Spotless
-  obligatorio, un ADR por decisión con su alternativa descartada, PR siempre contra `develop`). Yo
-  priorizo qué sigue, reviso cada PR antes de mergearlo y tomo las decisiones de producto que el
-  enunciado deja abiertas.
+- Con requisitos y stack bajados a tierra, armé un plan dividido en diez épicas para sostener el
+  mejor ritmo de trabajo posible durante los siete días ([`doc/epics/`](epics/)).
+- Cada épica se partió en 43 sub-issues con requerimientos acotados, del tamaño de un PR cada uno —
+  eso permitió correr sesiones en paralelo, cada una limitada a una sola tarea, para mantener el
+  contexto ajustado y sacar el mejor resultado de cada sesión en vez de una sola intentando abarcar
+  todo a la vez.
+- Esa misma división habilitó paralelizar el trabajo real, no solo el planeamiento: backend por un
+  lado, frontend por otro, integración con el agente de IA externo (Gemini) por otro.
+- Fui construyendo y afinando el contexto del proyecto en `CLAUDE.md` en cada iteración —
+  arquitectura, convenciones, reglas de trabajo — así cada sesión nueva de Claude Code arrancaba con
+  el mismo criterio que las anteriores en vez de tener que redescubrirlo. Yo priorizo qué sub-issue
+  sigue, reviso cada PR antes de mergearlo y tomo las decisiones de producto que el enunciado deja
+  abiertas.
 
 ## Lógica de implementación: el dominio decide, el modelo orquesta
 - Las reglas de negocio (RN-01 a RN-08) viven como invariantes de tipos en `domain` —
@@ -43,27 +55,33 @@
   ([ADR 0007](adr/0007-resolucion-del-usuario-actual.md)).
 
 ## Desafíos encontrados y cómo se resolvieron
-- Un mismo síntoma en producción escondía tres bugs apilados: un `ClassCastException` de
-  LangChain4j 1.0.0 al combinar parámetros con tools (arreglado actualizando a 1.2.0), el mismo
-  antipatrón replicado en mi propio wrapper de `ChatModel` diferido (`doChat()` en vez de `chat()`),
-  y un `IllegalStateException` de usuario no autenticado en el hilo de streaming. Los tres exigieron
-  reproducir el camino real contra el proveedor — invisibles para los tests con stub.
-- La doble reserva bajo carga concurrente necesitó una segunda línea de defensa en la base:
+- **El deploy fue uno de los desafíos más grandes.** Local con Docker no daba ningún problema, pero
+  Railway exigía un par de cosas más — sobre todo cómo se seteaban las variables de entorno — que
+  fui resolviendo de a una con la documentación de la plataforma. Hubo una curva de aprendizaje real,
+  pero una vez encaminado encontré el valor de Railway: buena UI, buen manejo de logs, deploy
+  práctico desde GitHub sin tener que configurar infraestructura aparte
+  ([runbook de despliegue](deployment-runbook.md)).
+- **El límite de requests de Gemini fue el problema más grande del lado de la IA.** Por eso Groq
+  quedó como segundo proveedor por default, no solo como red de contención en producción: tener dos
+  proveedores (y dos cuentas de prueba, una por proveedor) me permitió seguir testeando en paralelo
+  sin quedarme sin cupo en pleno desarrollo ([ADR 0009](adr/0009-limites-del-tier-gratuito-de-gemini.md),
+  [ADR 0013](adr/0013-proveedor-de-modelo.md)).
+- **La integración con LangChain4j tuvo un problema recurrente ya con la app desplegada:** las
+  respuestas no se parseaban bien y tiraba errores apenas el asistente respondía usando una tool.
+  Investigando a fondo (issue #106) encontré que era un desalineamiento de versiones de LangChain4j
+  1.0.0: el `ChatModel` perdía el tipo concreto de los parámetros al combinarlos con los de la tool,
+  y el cast posterior explotaba con `ClassCastException`. Actualizar las cinco dependencias a la
+  1.2.0 lo resolvió.
+- **La doble reserva bajo carga concurrente** necesitó una segunda línea de defensa en la base:
   `EXCLUDE USING gist` de Postgres, con el hallazgo de que bajo inserts concurrentes el conflicto a
   veces se resuelve como *deadlock* (`40P01`) y no como `exclusion_violation` (`23P01`) — hubo que
   cubrir los dos SQLSTATE ([ADR 0005](adr/0005-constraint-de-exclusion.md)).
-- El tier gratuito de Gemini resultó mucho más chico de lo esperado (20 requests/día, y los `503`
-  fallidos igual consumen cupo), lo que obligó a un failover automático a Groq con reintentos
-  acotados, más rate limit y health check ya en producción para no agotar la cuota durante la
-  evaluación ([ADR 0009](adr/0009-limites-del-tier-gratuito-de-gemini.md),
-  [ADR 0012](adr/0012-health-check-y-rate-limit-en-el-chat.md)).
-- Reutilizar `BookingRange` (pensado para el máximo de 3 horas de una reserva) para representar el
-  rango de una *consulta* de disponibilidad rompía pedir la agenda de un día completo
-  (`400 MAX_DURATION_EXCEEDED`); lo resolví separando el concepto en `QueryRange`, con las mismas
-  reglas de horario de oficina pero sin el límite de duración.
-- El catálogo de modelos gratuitos cambia en semanas, no en meses: `gemini-2.5-flash` y los modelos
-  default de Groq quedaron discontinuados durante el desarrollo — la lección fue que fijar un nombre
-  de modelo en configuración es una decisión con fecha de vencimiento conocida, no un dato estático.
+- **La lógica de negocio de la API en sí no dio mayor problema** — era una API acotada de entrada,
+  así que el desarrollo fue rápido y solo necesitó ajustes chicos sobre la marcha (por ejemplo,
+  separar `QueryRange` de `BookingRange` cuando reusar el value object de reserva para una consulta
+  de disponibilidad rompía pedir la agenda de un día completo).
+- Sumé Swagger/OpenAPI sobre la API REST para tener un ambiente de prueba simple y accesible, donde
+  cualquiera puede probar los endpoints sin pasar por el chat.
 
 ## Huecos del enunciado y qué se decidió
 - Capacidad de sala sin números concretos → escalera fija A=4, B=6, C=8, D=12, E=20 en un enum
