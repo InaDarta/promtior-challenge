@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
  * medio -- equivalente en streaming de {@link StubChatModel}. Los callbacks corren de forma
  * síncrona, en el mismo hilo que invoca {@link #doChat}.
  */
-record StubStreamingChatModel(BiConsumer<ChatRequest, StreamingChatResponseHandler> behavior)
+public record StubStreamingChatModel(BiConsumer<ChatRequest, StreamingChatResponseHandler> behavior)
     implements StreamingChatModel {
 
   @Override
