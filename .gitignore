@@ -37,3 +37,6 @@ target/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Claude Code
+.claude/worktrees/
