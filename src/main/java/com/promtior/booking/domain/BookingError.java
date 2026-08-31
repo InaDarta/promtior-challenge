@@ -86,9 +86,9 @@ public sealed interface BookingError {
 
   /**
    * Código estable por tipo de violación (contrato de E04.4): lo consume tanto {@code
-   * infrastructure.rest.BookingProblems} como {@code infrastructure.llm.BookingTools} para que REST
-   * y las tools del agente (E05) devuelvan el mismo código ante el mismo error de dominio.
-   * Exhaustivo por tipo de {@link BookingError}, sin rama default.
+   * infrastructure.rest.error.BookingProblems} como {@code infrastructure.llm.tools.BookingTools}
+   * para que REST y las tools del agente (E05) devuelvan el mismo código ante el mismo error de
+   * dominio. Exhaustivo por tipo de {@link BookingError}, sin rama default.
    */
   default String code() {
     return switch (this) {

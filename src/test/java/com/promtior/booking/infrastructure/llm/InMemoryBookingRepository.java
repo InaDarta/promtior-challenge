@@ -18,7 +18,7 @@ import java.util.UUID;
  * escritura (E05.5) sin Spring ni base. {@link #save} simula el constraint de exclusión de Postgres
  * (RN-07): dos reservas de la misma sala que se solapan no coexisten.
  */
-class InMemoryBookingRepository implements BookingRepository {
+public class InMemoryBookingRepository implements BookingRepository {
 
   private final Map<UUID, Booking> bookings = new LinkedHashMap<>();
 

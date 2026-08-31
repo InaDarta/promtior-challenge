@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.promtior.booking.AbstractPostgresIntegrationTest;
+import com.promtior.booking.infrastructure.rest.controller.BookingControllerTest;
+import com.promtior.booking.infrastructure.rest.dto.LoginRequest;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.time.Duration;

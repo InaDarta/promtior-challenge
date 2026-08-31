@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.promtior.booking.AbstractPostgresIntegrationTest;
 import com.promtior.booking.infrastructure.llm.EchoHistoryChatModel;
+import com.promtior.booking.infrastructure.rest.dto.ChatRequest;
+import com.promtior.booking.infrastructure.rest.dto.LoginRequest;
 import dev.langchain4j.model.chat.ChatModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

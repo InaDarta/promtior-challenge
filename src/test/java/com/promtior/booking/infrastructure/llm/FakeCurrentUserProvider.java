@@ -4,11 +4,11 @@ import com.promtior.booking.application.CurrentUserProvider;
 import com.promtior.booking.domain.User;
 
 /** Doble de {@link CurrentUserProvider} que siempre devuelve el usuario con el que se construyó. */
-class FakeCurrentUserProvider implements CurrentUserProvider {
+public class FakeCurrentUserProvider implements CurrentUserProvider {
 
   private final User user;
 
-  FakeCurrentUserProvider(User user) {
+  public FakeCurrentUserProvider(User user) {
     this.user = user;
   }
 
