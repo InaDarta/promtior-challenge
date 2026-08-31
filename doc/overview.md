@@ -41,7 +41,7 @@
   reviso cada pull request antes de integrarlo y tomo las decisiones de producto que el enunciado
   deja abiertas.
 
-## 3. Lógica de implementación: el dominio decide, el modelo orquesta
+## 3. Lógica de implementación
 
 - Implementé las reglas de negocio (RN-01 a RN-08) como invariantes de tipos en `domain`:
   constructores compactos de `record` y una interfaz `BookingError` sellada y exhaustiva, nunca como
