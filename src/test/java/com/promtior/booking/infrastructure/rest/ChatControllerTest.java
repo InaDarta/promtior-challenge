@@ -26,8 +26,14 @@ import org.springframework.test.web.servlet.MockMvc;
  * <p>El {@link ChatModel} de este test es un doble determinista que responde con la concatenación
  * de los mensajes de usuario que trae el request -- así el test cruza la memoria de conversación
  * real (por {@code memoryId}) sin depender de un proveedor de LLM real.
+ *
+ * <p>El cupo de {@code app.rate-limit.per-user} (E08.3, ADR 0012) es por diseño chico -- protege el
+ * RPM real del tier gratuito de Gemini (ADR 0009). Esta clase manda varios mensajes seguidos como
+ * {@code User1} a lo largo de sus tests, todos contra el mismo {@code ApplicationContext} cacheado:
+ * se lo sube acá para no competir con ese cupo, sin tocar el default de producción.
  */
-@SpringBootTest
+@SpringBootTest(
+    properties = {"app.rate-limit.per-user.capacity=100", "app.rate-limit.global.capacity=100"})
 @AutoConfigureMockMvc
 @Import(ChatControllerTest.AsistenteDePruebaConfig.class)
 class ChatControllerTest extends AbstractPostgresIntegrationTest {
