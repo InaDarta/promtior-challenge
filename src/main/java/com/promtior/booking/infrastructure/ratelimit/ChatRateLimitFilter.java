@@ -6,6 +6,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,6 +28,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 class ChatRateLimitFilter extends OncePerRequestFilter {
+
+  private static final Logger log = LoggerFactory.getLogger(ChatRateLimitFilter.class);
 
   private final ChatRateLimiter rateLimiter;
   private final ObjectMapper objectMapper;
@@ -52,6 +56,10 @@ class ChatRateLimitFilter extends OncePerRequestFilter {
 
     RateLimitDecision decision = rateLimiter.check(authentication.getName());
     if (!decision.allowed()) {
+      log.warn(
+          "Rate limit ({}) alcanzado para el usuario {}",
+          decision.exceededScope(),
+          authentication.getName());
       reject(response, decision);
       return;
     }
