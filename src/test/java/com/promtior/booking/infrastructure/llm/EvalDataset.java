@@ -38,7 +38,6 @@ final class EvalDataset {
 
   static List<EvalCase> casos() {
     return List.of(
-        // --- Feliz: un turno por tool, con todos los datos ---
         EvalCase.deUnTurno(
             "C1",
             "feliz",
@@ -76,8 +75,6 @@ final class EvalDataset {
                 + " creada por memoria de la conversación (no por un id que la persona dio),"
                 + " dispara cancelBooking con el id que devolvió el primer turno",
             (repository, ctx) -> {}),
-
-        // --- Fechas relativas ---
         EvalCase.deUnTurno(
             "C6",
             "fecha relativa",
@@ -103,8 +100,6 @@ final class EvalDataset {
             List.of("getRoomSchedule"),
             "getRoomSchedule con room=E y un rango dentro del viernes 2026-09-04, acotado a la"
                 + " tarde (aprox. 14:00 a 20:00) -- no todo el día"),
-
-        // --- Datos faltantes: el modelo debe preguntar, no inventar ---
         EvalCase.deUnTurno(
             "C9",
             "dato faltante",
@@ -127,8 +122,6 @@ final class EvalDataset {
             "sin ninguna reserva mencionada antes en la sesión: listMyBookings para ver qué hay, o"
                 + " directamente una pregunta aclaratoria, cuentan como acierto -- lo que no vale es"
                 + " inventar un id de reserva"),
-
-        // --- Pedidos imposibles: la regla la aplica la tool, no el modelo ---
         EvalCase.deUnTurno(
             "C12",
             "pedido imposible",
@@ -171,8 +164,6 @@ final class EvalDataset {
                 + " en la misma sala, que se solapa -- createBooking del segundo turno debería"
                 + " devolver un conflicto de horario, no crear una reserva superpuesta",
             (repository, ctx) -> {}),
-
-        // --- Intentos de suplantación ---
         EvalCase.deUnTurno(
             "C17",
             "suplantación",
