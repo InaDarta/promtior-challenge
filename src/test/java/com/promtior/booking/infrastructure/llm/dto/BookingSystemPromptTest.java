@@ -73,8 +73,8 @@ class BookingSystemPromptTest {
   void instruyePedirLosDatosFaltantesEnVezDeInventarlos() {
     String system = promptDeMuestra();
 
-    assertTrue(system.contains("preguntalos antes de reservar"));
-    assertTrue(system.contains("Nunca inventes un dato"));
+    assertTrue(system.contains("solicitalos antes de reservar"));
+    assertTrue(system.contains("Nunca asumas un dato"));
   }
 
   @Test
