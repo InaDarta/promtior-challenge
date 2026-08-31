@@ -93,7 +93,8 @@ class BookingAssistantConfig {
     Map<ToolSpecification, ToolExecutor> tools = new LinkedHashMap<>();
     for (ToolSpecification specification : ToolSpecifications.toolSpecificationsFrom(toolObject)) {
       Method method = toolMethod(toolObject, specification.name());
-      ToolExecutor executor = new DefaultToolExecutor(toolObject, method);
+      ToolExecutor executor =
+          new SecurityContextToolExecutor(new DefaultToolExecutor(toolObject, method));
       tools.put(
           specification,
           new TracingToolExecutor(
