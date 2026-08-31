@@ -41,9 +41,6 @@ class JpaBookingRepository implements BookingRepository {
   @Override
   public UUID save(Booking booking) {
     try {
-      // flush, no solo save: el INSERT tiene que golpear la base ahora, dentro de este método,
-      // para que la violación del constraint de exclusión se traduzca acá y no escape más tarde
-      // al hacer commit de la transacción.
       return repository.saveAndFlush(BookingJpaEntity.fromDomain(booking)).getId();
     } catch (DataIntegrityViolationException | ConcurrencyFailureException e) {
       if (!isConflict(e)) {

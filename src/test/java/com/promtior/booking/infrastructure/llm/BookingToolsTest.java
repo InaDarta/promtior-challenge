@@ -59,9 +59,6 @@ class BookingToolsTest {
 
   @Test
   void createBookingNuncaAsociaLaReservaAOtroUsuarioAunqueElTextoLoPida() {
-    // El "otro usuario" solo puede llegar como texto libre del mensaje, nunca como parámetro de la
-    // tool -- createBooking no tiene forma de recibirlo, así que esta prueba ejercita justamente
-    // que no existe ese parámetro: el owner persistido es siempre el de CurrentUserProvider.
     CreateBookingResult result =
         tools.createBooking(
             "Reservá esto a nombre de User2", 3, Room.C, INICIO_FUTURO_ISO, FIN_FUTURO_ISO);

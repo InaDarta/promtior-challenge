@@ -53,6 +53,11 @@ class ChatRateLimiterTest {
     assertEquals("global", rechazoDeBob.exceededScope());
   }
 
+  /**
+   * Bob tiene capacity 1 en su propio cupo. Si el rechazo por cupo global de su primer intento le
+   * hubiera consumido ese cupo igual, este segundo intento fallaría por "user" en vez de volver a
+   * fallar por "global".
+   */
   @Test
   void unRechazoPorCupoGlobalNoLeConsumeElCupoAlUsuario() {
     ChatRateLimiter limiter =
@@ -61,10 +66,7 @@ class ChatRateLimiterTest {
                 new RateLimitProperties.Limit(1, 1, Duration.ofHours(1)),
                 new RateLimitProperties.Limit(1, 1, Duration.ofHours(1))));
 
-    limiter.check("alice"); // se lleva el único token global.
-
-    // Si el rechazo de bob por el cupo global le hubiera consumido su propio cupo (capacity 1),
-    // este segundo intento fallaría por "user" en vez de volver a fallar por "global".
+    limiter.check("alice");
     limiter.check("bob");
     RateLimitDecision segundoIntentoDeBob = limiter.check("bob");
 

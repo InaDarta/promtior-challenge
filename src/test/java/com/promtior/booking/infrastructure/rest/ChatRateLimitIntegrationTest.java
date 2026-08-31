@@ -65,7 +65,6 @@ class ChatRateLimitIntegrationTest extends AbstractPostgresIntegrationTest {
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.detail").exists());
 
-    // El cupo de User1 ya se agotó, pero es por usuario: User2 sigue teniendo el suyo entero.
     mockMvc.perform(chatRequest(tokenUser2, "hola")).andExpect(status().isOk());
   }
 

@@ -49,7 +49,6 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (UsernameNotFoundException e) {
-          // el token es válido pero la cuenta ya no existe: seguir sin autenticar.
         }
       }
     }

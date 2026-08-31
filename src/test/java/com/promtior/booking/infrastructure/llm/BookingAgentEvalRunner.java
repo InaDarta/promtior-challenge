@@ -122,9 +122,6 @@ class BookingAgentEvalRunner {
         ultimaRespuesta = assistant.chat(sessionId, mensaje);
       }
     } catch (RuntimeException e) {
-      // getClass().getName() + printStackTrace(): un mensaje suelto como "Not implemented" no
-      // alcanza para diagnosticar nada -- con la excepción completa a la vista se puede saber si
-      // es la key, el rate limit o un tipo de parámetro de una tool que el proveedor no soporta.
       System.err.println("Error real en " + caso.id() + ":");
       e.printStackTrace();
       return new Resultado(
@@ -263,8 +260,6 @@ class BookingAgentEvalRunner {
   }
 
   private static String turnosComoTexto(EvalCase caso) {
-    // Solo para el reporte: los turnos que dependen de un id sembrado (EvalContext) no se pueden
-    // reconstruir sin correr el caso -- se listan como placeholders reconocibles en vez de fallar.
     List<String> turnos = new ArrayList<>();
     for (Function<EvalContext, String> turno : caso.turnos()) {
       try {
