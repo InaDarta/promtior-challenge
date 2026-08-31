@@ -49,7 +49,8 @@ class SecurityConfig {
                     .permitAll()
                     .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                     .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/", "/index.html", "/assets/**")
+                    .requestMatchers(
+                        HttpMethod.GET, "/", "/index.html", "/assets/**", "/login", "/chat")
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
