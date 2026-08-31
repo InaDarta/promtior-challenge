@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError, streamChatMessage } from '../api/client'
-import { AgendaPanel, Button, ErrorBanner, Panel, Spinner, TextField } from '../components'
+import { AgendaPanel, Button, ErrorBanner, MarkdownMessage, Panel, Spinner, TextField } from '../components'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function appendToLastAssistantMessage(messages, token) {
@@ -96,7 +96,7 @@ export function ChatPage() {
                   : ''
               }`}
             >
-              {message.text}
+              {message.role === 'assistant' ? <MarkdownMessage text={message.text} /> : message.text}
             </li>
           ))}
         </ul>

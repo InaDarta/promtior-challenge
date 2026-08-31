@@ -3,6 +3,7 @@ package com.promtior.booking.infrastructure.rest;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -141,6 +142,40 @@ class RoomControllerTest extends AbstractPostgresIntegrationTest {
                 .param("end", "2026-09-02T09:00:00"))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+  }
+
+  @Test
+  void salasLibresEnUnRangoDeTodoElDiaNoTieneLimiteDeDuracion() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            get("/api/rooms/available")
+                .header("Authorization", "Bearer " + token)
+                .param("start", "2026-09-03T08:00:00")
+                .param("end", "2026-09-03T20:00:00"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void laAgendaDeUnaSalaEnUnRangoDeTodoElDiaNoTieneLimiteDeDuracion() throws Exception {
+    String token = login("User1");
+
+    mockMvc
+        .perform(
+            get("/api/rooms/{room}/schedule", "B")
+                .header("Authorization", "Bearer " + token)
+                .param("start", "2026-09-03T08:00:00")
+                .param("end", "2026-09-03T20:00:00"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.room").value("B"))
+        .andExpect(
+            result -> {
+              String body = result.getResponse().getContentAsString();
+              var json = objectMapper.readTree(body);
+              int total = json.get("freeSlots").size() + json.get("occupiedSlots").size();
+              assertEquals(24, total);
+            });
   }
 
   @Test

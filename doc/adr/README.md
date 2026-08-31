@@ -24,3 +24,4 @@ correlativo.
 - [0013](0013-proveedor-de-modelo.md) — Proveedor de modelo: Gemini primario, Groq de respaldo
 - [0014](0014-capacidades-de-las-salas.md) — Capacidades de las salas: escalera fija en un enum cerrado
 - [0015](0015-reglas-en-el-dominio-no-en-el-prompt.md) — Las reglas de negocio viven en el dominio, no en el prompt
+- [0016](0016-politica-de-logs.md) — Política de logs: niveles por qué tan esperable es cada caso, sin MDC propio

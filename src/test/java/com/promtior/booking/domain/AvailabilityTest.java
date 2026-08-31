@@ -19,8 +19,8 @@ class AvailabilityTest {
 
   @Test
   void sinReservasExistentesTodoElRangoEstaLibre() {
-    BookingRange range =
-        BookingRange.between(
+    QueryRange range =
+        QueryRange.between(
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 11, 30)));
 
@@ -33,8 +33,8 @@ class AvailabilityTest {
 
   @Test
   void unaReservaParcialEnElMedioDelRangoOcupaSoloEsosSlots() {
-    BookingRange rangoConsultado =
-        BookingRange.between(
+    QueryRange rangoConsultado =
+        QueryRange.between(
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 11, 30)));
     BookingRange rangoReservado =
@@ -57,11 +57,15 @@ class AvailabilityTest {
 
   @Test
   void conflictDevuelveUnSlotOccupiedConLosSlotsOcupados() {
-    BookingRange rangoConsultado =
+    QueryRange rangoConsultado =
+        QueryRange.between(
+            new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
+            new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 30)));
+    BookingRange rangoReservado =
         BookingRange.between(
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 30)));
-    Booking existente = booking(Room.C, rangoConsultado);
+    Booking existente = booking(Room.C, rangoReservado);
 
     Availability availability = Availability.of(Room.C, rangoConsultado, List.of(existente));
 
@@ -73,11 +77,15 @@ class AvailabilityTest {
 
   @Test
   void reservasEnOtraSalaNoAfectanLaDisponibilidad() {
-    BookingRange rangoConsultado =
+    QueryRange rangoConsultado =
+        QueryRange.between(
+            new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
+            new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 30)));
+    BookingRange rangoReservado =
         BookingRange.between(
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 30)));
-    Booking enOtraSala = booking(Room.D, rangoConsultado);
+    Booking enOtraSala = booking(Room.D, rangoReservado);
 
     Availability availability = Availability.of(Room.C, rangoConsultado, List.of(enOtraSala));
 
@@ -86,9 +94,22 @@ class AvailabilityTest {
   }
 
   @Test
+  void unaConsultaDeMasDeTresHorasNoTieneLimiteDeDuracion() {
+    QueryRange diaCompleto =
+        QueryRange.between(
+            new TimeSlot(LocalDateTime.of(2026, 8, 27, 8, 0)),
+            new TimeSlot(LocalDateTime.of(2026, 8, 27, 19, 30)));
+
+    Availability availability = Availability.of(Room.C, diaCompleto, List.of());
+
+    assertEquals(24, diaCompleto.slotCount());
+    assertEquals(diaCompleto.slots(), availability.freeSlots());
+  }
+
+  @Test
   void ofRechazaArgumentosNulos() {
-    BookingRange range =
-        BookingRange.between(
+    QueryRange range =
+        QueryRange.between(
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 0)),
             new TimeSlot(LocalDateTime.of(2026, 8, 27, 10, 30)));
     assertThrows(NullPointerException.class, () -> Availability.of(null, range, List.of()));

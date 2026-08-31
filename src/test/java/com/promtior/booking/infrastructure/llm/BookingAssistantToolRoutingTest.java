@@ -22,7 +22,9 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +46,7 @@ class BookingAssistantToolRoutingTest {
   private static final User YO = new User("user-yo");
   private static final User OTRO = new User("user-otro");
 
-  /** Lunes, dentro de horario de oficina (ver {@link BookingToolsTest}). */
+  /** Lunes, dentro de horario de oficina; el {@link Clock} fijo del test está en 1970. */
   private static final LocalDateTime INICIO_FUTURO = LocalDateTime.of(2026, 8, 31, 10, 0);
 
   @Test
@@ -161,7 +163,9 @@ class BookingAssistantToolRoutingTest {
         .withBean(ConversationTraceRegistry.class, ConversationTraceRegistry::new)
         .withBean(
             CreateBooking.class,
-            () -> new CreateBooking(repository, currentUser, Clock.systemDefaultZone()))
+            () ->
+                new CreateBooking(
+                    repository, currentUser, Clock.fixed(Instant.EPOCH, ZoneId.of("UTC"))))
         .withBean(CancelBooking.class, () -> new CancelBooking(repository, currentUser))
         .withBean(BookingTools.class);
   }

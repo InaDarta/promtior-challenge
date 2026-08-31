@@ -79,6 +79,17 @@ class RoomQueryToolsTest {
   }
 
   @Test
+  void getRoomScheduleAceptaUnRangoDeMasDeTresHoras() {
+    LocalDateTime inicioDeOficina = LocalDateTime.of(2026, 8, 31, 8, 0);
+    LocalDateTime finDeOficina = LocalDateTime.of(2026, 8, 31, 20, 0);
+
+    AvailabilitySummary agenda =
+        tools.getRoomSchedule(Room.C, inicioDeOficina.toString(), finDeOficina.toString());
+
+    assertEquals(24, agenda.freeSlots().size());
+  }
+
+  @Test
   void elEsquemaDeGetRoomScheduleNoAdmiteUnaSalaFueraDeAaE() {
     ToolSpecification spec =
         ToolSpecifications.toolSpecificationsFrom(tools).stream()

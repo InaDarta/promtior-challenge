@@ -15,6 +15,14 @@ spring:
 server:
   port: 8080
 
+logging:
+  level:
+    # INFO por default: alcanza para ver failover de LLM, rate limiting y logins rechazados sin
+    # ruido. Los casos de negocio esperables (reserva ajena, conflicto de horario, etc.) quedan en
+    # DEBUG -- se suben con esta misma variable cuando hace falta investigar algo puntual, sin
+    # redeploy. Ver ADR 0016.
+    com.promtior.booking: ${LOG_LEVEL:INFO}
+
 app:
   rate-limit:
     # /api/chat: RPM=5 en el tier gratuito de Gemini (ADR 0009) -- unos pocos usuarios en paralelo

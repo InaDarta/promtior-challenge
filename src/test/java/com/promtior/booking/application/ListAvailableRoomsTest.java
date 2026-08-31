@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.promtior.booking.domain.Booking;
 import com.promtior.booking.domain.BookingRange;
+import com.promtior.booking.domain.QueryRange;
 import com.promtior.booking.domain.Room;
 import com.promtior.booking.domain.TimeSlot;
 import com.promtior.booking.domain.User;
@@ -14,7 +15,11 @@ import org.junit.jupiter.api.Test;
 class ListAvailableRoomsTest {
 
   private static final User OWNER = new User("User1");
-  private static final BookingRange RANGE =
+  private static final QueryRange RANGE =
+      QueryRange.between(
+          new TimeSlot(LocalDateTime.of(2026, 8, 31, 10, 0)),
+          new TimeSlot(LocalDateTime.of(2026, 8, 31, 10, 30)));
+  private static final BookingRange RANGE_COMO_RESERVA =
       BookingRange.between(
           new TimeSlot(LocalDateTime.of(2026, 8, 31, 10, 0)),
           new TimeSlot(LocalDateTime.of(2026, 8, 31, 10, 30)));
@@ -31,7 +36,7 @@ class ListAvailableRoomsTest {
 
   @Test
   void unaSalaConUnSlotOcupadoEnElRangoQuedaFueraDeLasLibres() {
-    repository.save(new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE));
+    repository.save(new Booking("Retro de equipo", 3, OWNER, Room.C, RANGE_COMO_RESERVA));
 
     List<Room> libres = useCase.execute(RANGE, null);
 
@@ -53,7 +58,7 @@ class ListAvailableRoomsTest {
 
   @Test
   void unaReservaEnOtraSalaNoAfectaLaDisponibilidad() {
-    repository.save(new Booking("Retro de equipo", 3, OWNER, Room.D, RANGE));
+    repository.save(new Booking("Retro de equipo", 3, OWNER, Room.D, RANGE_COMO_RESERVA));
 
     List<Room> libres = useCase.execute(RANGE, null);
 
@@ -65,5 +70,17 @@ class ListAvailableRoomsTest {
     List<Room> libres = useCase.execute(RANGE, 10);
 
     assertEquals(List.of(Room.D, Room.E), libres);
+  }
+
+  @Test
+  void unaConsultaDeMasDeTresHorasNoTieneLimiteDeDuracion() {
+    QueryRange diaCompleto =
+        QueryRange.between(
+            new TimeSlot(LocalDateTime.of(2026, 8, 31, 8, 0)),
+            new TimeSlot(LocalDateTime.of(2026, 8, 31, 19, 30)));
+
+    List<Room> libres = useCase.execute(diaCompleto, null);
+
+    assertEquals(List.of(Room.values()), libres);
   }
 }

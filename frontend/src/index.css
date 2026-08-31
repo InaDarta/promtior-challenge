@@ -314,6 +314,23 @@ body {
   margin-bottom: 0;
 }
 
+.markdown-message__paragraph {
+  margin: 0 0 0.5rem;
+}
+
+.markdown-message__paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-message__list {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.markdown-message__list:last-child {
+  margin-bottom: 0;
+}
+
 .chat__message--streaming::after {
   content: '▍';
   margin-left: 0.125rem;

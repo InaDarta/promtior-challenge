@@ -1,8 +1,5 @@
 package com.promtior.booking.domain;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,11 +14,6 @@ public record BookingRange(List<TimeSlot> slots) {
   /** Zona horaria en la que se interpretan los horarios de oficina y del reloj del dominio. */
   public static final ZoneId OFFICE_ZONE = ZoneId.of("America/Montevideo");
 
-  private static final DayOfWeek FIRST_OFFICE_DAY = DayOfWeek.MONDAY;
-  private static final DayOfWeek LAST_OFFICE_DAY = DayOfWeek.FRIDAY;
-  private static final LocalTime OFFICE_OPENING = LocalTime.of(8, 0);
-  private static final LocalTime OFFICE_CLOSING = LocalTime.of(20, 0);
-
   public BookingRange {
     Objects.requireNonNull(slots, "slots");
     if (slots.isEmpty()) {
@@ -32,24 +24,8 @@ public record BookingRange(List<TimeSlot> slots) {
       throw new BookingErrorException(
           new BookingError.MaxDurationExceeded(slots.size(), MAX_SLOT_COUNT));
     }
-    for (int i = 1; i < slots.size(); i++) {
-      TimeSlot previous = slots.get(i - 1);
-      TimeSlot current = slots.get(i);
-      if (!current.start().equals(previous.end())) {
-        throw new BookingErrorException(new BookingError.NonContiguousRange(previous, current));
-      }
-    }
-    LocalDateTime start = slots.get(0).start();
-    LocalDateTime end = slots.get(slots.size() - 1).end();
-    DayOfWeek day = start.getDayOfWeek();
-    if (day.compareTo(FIRST_OFFICE_DAY) < 0 || day.compareTo(LAST_OFFICE_DAY) > 0) {
-      throw new BookingErrorException(new BookingError.OutsideOfficeHours(start, end));
-    }
-    if (start.toLocalTime().isBefore(OFFICE_OPENING)
-        || !end.toLocalDate().equals(start.toLocalDate())
-        || end.toLocalTime().isAfter(OFFICE_CLOSING)) {
-      throw new BookingErrorException(new BookingError.OutsideOfficeHours(start, end));
-    }
+    SlotRangeValidation.requireContiguous(slots);
+    SlotRangeValidation.requireOfficeHours(slots);
   }
 
   /** Construye el rango contiguo de slots entre {@code start} y {@code end}, ambos incluidos. */
