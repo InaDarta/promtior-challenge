@@ -1,7 +1,7 @@
 package com.promtior.booking.application;
 
 import com.promtior.booking.domain.Availability;
-import com.promtior.booking.domain.BookingRange;
+import com.promtior.booking.domain.QueryRange;
 import com.promtior.booking.domain.Room;
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +27,7 @@ public class ListAvailableRooms {
    * @param minCapacity capacidad mínima que debe soportar la sala, o {@code null} para no filtrar
    *     por capacidad
    */
-  public List<Room> execute(BookingRange range, Integer minCapacity) {
+  public List<Room> execute(QueryRange range, Integer minCapacity) {
     Objects.requireNonNull(range, "range");
     return Arrays.stream(Room.values())
         .filter(room -> minCapacity == null || room.capacity() >= minCapacity)
@@ -35,7 +35,7 @@ public class ListAvailableRooms {
         .toList();
   }
 
-  private boolean isFree(Room room, BookingRange range) {
+  private boolean isFree(Room room, QueryRange range) {
     return Availability.of(room, range, bookingRepository.findByRoom(room))
         .occupiedSlots()
         .isEmpty();
