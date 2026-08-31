@@ -187,7 +187,7 @@ class BookingAgentEvalRunner {
       return new Proveedor("gemini", modelo, chatModel);
     }
     if (groq != null && !groq.isBlank()) {
-      String modelo = envO("GROQ_MODEL_NAME", "llama-3.3-70b-versatile");
+      String modelo = envO("GROQ_MODEL_NAME", "openai/gpt-oss-20b");
       ChatModel chatModel =
           OpenAiChatModel.builder()
               .baseUrl(envO("GROQ_BASE_URL", "https://api.groq.com/openai/v1"))
