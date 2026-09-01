@@ -15,6 +15,14 @@
 - **React** para el frontend, por ser la tecnología con la que trabaja Promtior y por su cercanía
   con Vue (mi experiencia previa), lo que me permitió resolver el frontend acotado que pedía el
   challenge sin invertir tiempo adicional en aprender un framework nuevo desde cero.
+- **Vite** como herramienta de build, scaffoldeado con `npm create vite@latest`
+  ([frontend/README.md](../frontend/README.md)). El frontend es una SPA sin necesidad de
+  server-side rendering (dos pantallas, login y chat, detrás de autenticación), así que un
+  framework full-stack como Next.js hubiera sumado complejidad sin beneficio. Frente a
+  Create React App (ya deprecado por el propio equipo de React), Vite da arranque y HMR
+  casi instantáneos gracias a módulos ES nativos en desarrollo, con una configuración mínima
+  ([frontend/vite.config.js](../frontend/vite.config.js)) que no le restó tiempo al resto del
+  challenge.
 - **Gemini** como proveedor del agente conversacional, porque ya lo había integrado antes en un
   proyecto de la facultad. Esa experiencia previa redujo el riesgo en la parte más nueva del
   challenge: el tool calling con un modelo de lenguaje real.
@@ -102,3 +110,56 @@
 | No se define el proveedor de modelo ni el criterio de failover. | Gemini como proveedor primario, Groq como respaldo automático y Ollama para desarrollo offline, los tres detrás del mismo perfil de Spring. | [ADR 0001](adr/0001-stack.md), [ADR 0013](adr/0013-proveedor-de-modelo.md) |
 | El enunciado presupone un notebook en Python, mientras el proyecto está desarrollado en Java. | Notebook implementado con `rapaio-jupyter-kernel`, verificado de punta a punta contra JDK 25 antes de adoptar la decisión. | [ADR 0002](adr/0002-notebook-java-o-python.md) |
 | No se especifica si cancelar una reserva ajena debe distinguirse de cancelar una reserva inexistente. | Se devuelve el mismo error (403) en ambos casos, para no habilitar la enumeración de reservas ajenas mediante identificadores al azar. | [ADR 0008](adr/0008-cancelacion-de-reservas-y-exposicion-del-id.md) |
+
+## 6. Mejoras a futuro
+
+Lo siguiente son decisiones de alcance, no errores: dado el plazo de siete días del challenge,
+prioricé lo que pide el enunciado y descarté explícitamente lo demás (ver los ADRs referenciados
+en cada punto). Quedan documentadas acá como el trabajo que haría a continuación si este proyecto
+siguiera en desarrollo.
+
+- **Catálogo de salas administrable.** `Room` es hoy un enum cerrado con capacidad fija (A=4, B=6,
+  C=8, D=12, E=20), sembrado por Flyway y sin UI de administración
+  ([ADR 0014](adr/0014-capacidades-de-las-salas.md)). Agregar o modificar una sala requiere una
+  migración y un release. Con más alcance, sumaría un catálogo persistido y editable en runtime, y
+  un rol `admin` propio — hoy `AppUserDetailsService` no distingue roles, todos los usuarios
+  sembrados tienen los mismos permisos.
+- **Rate limiting distribuido.** `ChatRateLimiter` guarda los cupos de bucket4j en un
+  `ConcurrentHashMap` del proceso
+  ([infrastructure/ratelimit](../src/main/java/com/promtior/booking/infrastructure/ratelimit)),
+  limitación que su propio `package-info.java` deja explícita: sobrevive un único proceso, no un
+  restart ni varias instancias. Escalar a más de una réplica en Railway (o cualquier balanceo
+  horizontal) requeriría mover el cupo a un backend compartido, típicamente Redis.
+- **Suite de evaluación del agente en CI.** Hoy `BookingAgentEvalRunner` corre a mano y cubrió 8 de
+  20 casos del dataset en la última corrida, limitado por el tier gratuito de Gemini (RPD=20) y de
+  Groq (8000 TPM) — ver [doc/eval/E07.3-resultados.md](eval/E07.3-resultados.md). Con presupuesto
+  de API dedicado, correría el dataset completo en un job de CI aparte, no bloqueante en cada PR,
+  para tener señal continua de regresión de comportamiento del agente y no solo de compilación.
+- **Fallback de modelo dentro del mismo proveedor.** El default de `GROQ_MODEL_NAME` ya se corrigió
+  a un modelo vigente (`openai/gpt-oss-20b`), pero `application.yml` sigue fijando un único nombre
+  de modelo por proveedor: si Groq discontinúa ese modelo de nuevo, el síntoma es el mismo que ya
+  se vio en la corrida de eval — recién se nota en el primer mensaje de un usuario real. Con más
+  alcance, agregaría una lista de modelos candidatos por proveedor y un chequeo de arranque que
+  pruebe el primero disponible (o falle rápido y explícito si ninguno responde), en vez de depender
+  de mantener el nombre actualizado a mano.
+- **Logs estructurados y sink externo.** [ADR 0016](adr/0016-politica-de-logs.md) descartó JSON
+  logging a propósito: Railway ya parsea texto plano y no hay un sink externo (Datadog, ELK, Loki)
+  en el alcance de este proyecto. Con un volumen de uso real, revisaría esa decisión.
+- **Tracing de Langfuse por default.** Hoy es opt-in vía `LANGFUSE_TRACING_ENABLED`
+  ([ADR 0011](adr/0011-trazas-de-llm-y-tool-calls-con-langfuse.md)). En un entorno productivo real
+  lo dejaría encendido por default con muestreo, en vez de depender de que alguien lo prenda a
+  mano para investigar un caso puntual.
+- **Cobertura de tests medida.** `./mvnw verify` corre tests y Spotless pero no mide cobertura: no
+  hay JaCoCo ni un umbral mínimo en el pipeline de CI
+  ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). Lo agregaría con un piso alto en
+  `domain`/`application` (Java puro, se presta a cobertura casi total) y más laxo en
+  `infrastructure`.
+- **Tests automatizados de frontend.** `frontend/package.json` solo tiene `oxlint` como
+  verificación estática; no hay Vitest/Testing Library para componentes ni Playwright/Cypress para
+  el flujo end-to-end (login → chat → tool call → agenda). Hoy esa verificación es manual. CI
+  tampoco tiene un job de frontend: un `vite build` roto no se detecta hasta el deploy en Railway.
+- **Métrica de failover de proveedor.** El failover automático Gemini → Groq
+  ([ADR 0009](adr/0009-limites-del-tier-gratuito-de-gemini.md),
+  [ADR 0013](adr/0013-proveedor-de-modelo.md)) se loguea en WARN pero no se expone como métrica. Un
+  contador vía Actuator (o un span dedicado en Langfuse) permitiría ver en un dashboard cuánto
+  tiempo el sistema está operando en modo de respaldo, sin tener que grepear logs.
