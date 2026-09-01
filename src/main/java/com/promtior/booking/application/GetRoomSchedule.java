@@ -1,0 +1,26 @@
+package com.promtior.booking.application;
+
+import com.promtior.booking.domain.Availability;
+import com.promtior.booking.domain.QueryRange;
+import com.promtior.booking.domain.Room;
+import java.util.Objects;
+import org.springframework.stereotype.Service;
+
+/**
+ * Slots libres y ocupados de una sala en un rango. Delega el cálculo en {@link Availability#of}.
+ */
+@Service
+public class GetRoomSchedule {
+
+  private final BookingRepository bookingRepository;
+
+  public GetRoomSchedule(BookingRepository bookingRepository) {
+    this.bookingRepository = Objects.requireNonNull(bookingRepository, "bookingRepository");
+  }
+
+  public Availability execute(Room room, QueryRange range) {
+    Objects.requireNonNull(room, "room");
+    Objects.requireNonNull(range, "range");
+    return Availability.of(room, range, bookingRepository.findByRoom(room));
+  }
+}

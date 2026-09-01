@@ -1,0 +1,91 @@
+spring:
+  application:
+    name: booking-agent
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/booking}
+    username: ${SPRING_DATASOURCE_USERNAME:booking}
+    password: ${SPRING_DATASOURCE_PASSWORD:booking}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    # INFO por default: alcanza para ver failover de LLM, rate limiting y logins rechazados sin
+    # ruido. Los casos de negocio esperables (reserva ajena, conflicto de horario, etc.) quedan en
+    # DEBUG -- se suben con esta misma variable cuando hace falta investigar algo puntual, sin
+    # redeploy. Ver ADR 0016.
+    com.promtior.booking: ${LOG_LEVEL:INFO}
+
+app:
+  rate-limit:
+    # /api/chat: RPM=5 en el tier gratuito de Gemini (ADR 0009) -- unos pocos usuarios en paralelo
+    # ya lo agotan sin un techo propio. El cupo por usuario evita que uno solo se lleve todo el
+    # cupo global. Ver ADR 0012.
+    global:
+      capacity: 5
+      refill-tokens: 5
+      refill-period: 1m
+    per-user:
+      capacity: 2
+      refill-tokens: 2
+      refill-period: 1m
+  jwt:
+    # Clave HS256 en base64 (>= 256 bits). El default solo alcanza para dev/tests locales -- en
+    # cualquier despliegue real hay que fijar JWT_SECRET con un valor propio. Ver ADR 0006.
+    secret: ${JWT_SECRET:1+3i4e8C3sz0BOsZi3rLlmWmRiUd2p7zyvQZI072KThUIuI2vNW9c8RY8d8XWOvv}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+  llm:
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model-name: ${GEMINI_MODEL_NAME:gemini-3.7-flash}
+      # Techo bajo a propósito: el tier gratuito tiene RPD=20, y un reintento sin límite puede
+      # agotar el cupo diario en minutos. Ver ADR 0009.
+      max-retries: ${GEMINI_MAX_RETRIES:2}
+    groq:
+      api-key: ${GROQ_API_KEY:}
+      # llama-3.3-70b-versatile y llama-3.1-8b-instant ya no están disponibles en esta cuenta.
+      model-name: ${GROQ_MODEL_NAME:openai/gpt-oss-20b}
+      base-url: ${GROQ_BASE_URL:https://api.groq.com/openai/v1}
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      model-name: ${OLLAMA_MODEL_NAME:llama3.1}
+  observability:
+    langfuse:
+      # Apagado por default: sin esto, cada llamada al modelo y cada tool call arma spans que nadie
+      # exporta. Ver ADR 0011. LANGFUSE_OTEL_AUTH_HEADER es "Basic <base64 de pk:sk>", ya calculado
+      # (Langfuse lo pide así en sus propios docs) -- nunca las keys sueltas acá.
+      enabled: ${LANGFUSE_TRACING_ENABLED:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      # Sin esto /actuator/health solo devuelve el status agregado ({"status":"UP"}), sin decir
+      # qué componente falló. Es público (ver SecurityConfig) y el detalle es solo up/down de la
+      # base -- no hay nada sensible que exponer. Ver ADR 0012.
+      show-details: always
+  tracing:
+    sampling:
+      # Todas las conversaciones, no una muestra: el volumen de esta app no lo justifica y E07.4
+      # pide poder ver cualquier conversación completa como traza.
+      probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: ${LANGFUSE_TRACING_ENABLED:false}
+      endpoint: ${LANGFUSE_OTEL_ENDPOINT:https://cloud.langfuse.com/api/public/otel/v1/traces}
+      headers:
+        Authorization: ${LANGFUSE_OTEL_AUTH_HEADER:}
+        x-langfuse-ingestion-version: "4"

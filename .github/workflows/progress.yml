@@ -1,0 +1,68 @@
+name: Progreso
+
+# Regenera doc/PROGRESO.md cuando cambia el estado de los issues.
+#
+# Nota sobre el disparador: para los eventos `issues`, GitHub siempre ejecuta la
+# versión del workflow que está en la rama por defecto (main), no la de develop.
+# Por eso el job hace checkout explícito de develop, que es donde vive doc/.
+on:
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled, milestoned, demilestoned, deleted]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 11 * * *'   # red de seguridad diaria, 08:00 en Montevideo
+
+concurrency:
+  group: progreso
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Regenerar el tablero
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: ./scripts/progress.sh
+
+      # develop tiene PR obligatorio (ver #13), así que no se puede pushear
+      # directo: se abre un PR y se mergea solo cuando el CI de verify pasa.
+      - name: Abrir PR con el tablero actualizado y mergearlo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if git diff --quiet -- doc/PROGRESO.md; then
+            echo "sin cambios"
+            exit 0
+          fi
+
+          BRANCH="bot/progress-update"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add doc/PROGRESO.md
+          git commit -m "chore: refresh progress dashboard"
+          git push origin "$BRANCH" --force
+
+          PR_URL=$(gh pr list --head "$BRANCH" --base develop --json url --jq '.[0].url')
+          if [ -z "$PR_URL" ]; then
+            PR_URL=$(gh pr create --base develop --head "$BRANCH" \
+              --title "chore: refresh progress dashboard" \
+              --body "PR automático del workflow de progreso.")
+          fi
+
+          sleep 15
+          gh pr checks "$PR_URL" --watch --interval 15
+          gh pr merge "$PR_URL" --squash --delete-branch
