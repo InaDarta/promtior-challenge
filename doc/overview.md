@@ -135,12 +135,13 @@ siguiera en desarrollo.
   Groq (8000 TPM) — ver [doc/eval/E07.3-resultados.md](eval/E07.3-resultados.md). Con presupuesto
   de API dedicado, correría el dataset completo en un job de CI aparte, no bloqueante en cada PR,
   para tener señal continua de regresión de comportamiento del agente y no solo de compilación.
-- **`GROQ_MODEL_NAME` desactualizado.** Esa misma corrida detectó que los modelos por default de
-  `application.yml` (`llama-3.3-70b-versatile`, `llama-3.1-8b-instant`) ya no existen en el
-  catálogo de Groq; quedó anotado como "issue aparte" sin abrir. Lo resolvería fijando un modelo
-  vigente con tool calling y agregando un chequeo de arranque que falle rápido si el modelo
-  configurado no está disponible, en vez de descubrirlo recién en el primer mensaje de un usuario
-  real.
+- **Fallback de modelo dentro del mismo proveedor.** El default de `GROQ_MODEL_NAME` ya se corrigió
+  a un modelo vigente (`openai/gpt-oss-20b`), pero `application.yml` sigue fijando un único nombre
+  de modelo por proveedor: si Groq discontinúa ese modelo de nuevo, el síntoma es el mismo que ya
+  se vio en la corrida de eval — recién se nota en el primer mensaje de un usuario real. Con más
+  alcance, agregaría una lista de modelos candidatos por proveedor y un chequeo de arranque que
+  pruebe el primero disponible (o falle rápido y explícito si ninguno responde), en vez de depender
+  de mantener el nombre actualizado a mano.
 - **Logs estructurados y sink externo.** [ADR 0016](adr/0016-politica-de-logs.md) descartó JSON
   logging a propósito: Railway ya parsea texto plano y no hay un sink externo (Datadog, ELK, Loki)
   en el alcance de este proyecto. Con un volumen de uso real, revisaría esa decisión.
