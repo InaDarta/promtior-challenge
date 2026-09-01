@@ -15,6 +15,14 @@
 - **React** para el frontend, por ser la tecnología con la que trabaja Promtior y por su cercanía
   con Vue (mi experiencia previa), lo que me permitió resolver el frontend acotado que pedía el
   challenge sin invertir tiempo adicional en aprender un framework nuevo desde cero.
+- **Vite** como herramienta de build, scaffoldeado con `npm create vite@latest`
+  ([frontend/README.md](../frontend/README.md)). El frontend es una SPA sin necesidad de
+  server-side rendering (dos pantallas, login y chat, detrás de autenticación), así que un
+  framework full-stack como Next.js hubiera sumado complejidad sin beneficio. Frente a
+  Create React App (ya deprecado por el propio equipo de React), Vite da arranque y HMR
+  casi instantáneos gracias a módulos ES nativos en desarrollo, con una configuración mínima
+  ([frontend/vite.config.js](../frontend/vite.config.js)) que no le restó tiempo al resto del
+  challenge.
 - **Gemini** como proveedor del agente conversacional, porque ya lo había integrado antes en un
   proyecto de la facultad. Esa experiencia previa redujo el riesgo en la parte más nueva del
   challenge: el tool calling con un modelo de lenguaje real.
